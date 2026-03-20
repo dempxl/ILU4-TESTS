@@ -1,57 +1,52 @@
 ## Question 1 - Spécifications fonctionnelles
 
-La fonction `TriangleClassifier(a, b, c)` prend trois entiers représentant les longueurs des côtés d'un triangle et retourne un entier selon le tableau suivant :
+**Contexte :** La fonction reçoit trois entiers $a$, $b$, et $c$ représentant les longueurs des côtés d'un triangle.
 
-| Valeur retournée | Condition |
-|-|-|
-| 0 | Les entrées ne forment pas un triangle valide (côté ≤ 0 ou inégalité triangulaire non respectée) |
-| 1 | Triangle scalène : tous les côtés sont différents et la figure est un triangle valide |
-| 2 | Triangle isoscèle : exactement deux côtés sont égaux et la figure est un triangle valide |
-| 3 | Triangle équilatéral : les trois côtés sont égaux |
+| Exigence | Description          | Détail                                                                                                                       | Retour |
+|-         |-                     |-                                                                                                                             |-       |
+| $E_1$    | Pas un triangle      | Si au moins un côté est ≤ 0, ou si l'inégalité triangulaire n'est pas strictement respectée (a+b ≤ c ou a+c ≤ b ou b+c ≤ a). | 0      |
+| $E_2$    | Triangle scalène     | Si les trois côtés sont strictement positifs, l'inégalité triangulaire est respectée, et tous les côtés sont différents.     | 1      |
+| $E_3$    | Triangle isoscèle    | Si les trois côtés sont strictement positifs, l'inégalité triangulaire est respectée, et exactement deux côtés sont égaux.   | 2      |
+| $E_4$    | Triangle équilatéral | Si les trois côtés sont strictement positifs, l'inégalité triangulaire est respectée, et les trois côtés sont égaux.         | 3      |
 
 **Conditions de validité d'un triangle :**
 
 Tous les côtés doivent être strictement positifs :
 
 $$
-a > 0, b > 0, c > 0
+\begin{cases}
+    a > 0\\
+    b > 0\\
+    c > 0
+\end{cases}
 $$
 
 L'inégalité triangulaire doit être vérifiée :
 
 $$
-a + b > c, a + c > b, b + c > a
+\begin{cases}
+    a + b > c\\
+    a + c > b\\
+    b + c > a
+\end{cases}
 $$
 
 ## Question 2 - Suite de tests
 
-### 2.1 - Classes d'équivalence
+**Tableau de classes d'équivalence**
 
-**Classes invalides (résultat attendu = 0)**
-
-| ID  | Description                             | Exemple (a, b, c) | Résultat attendu |
-|-    |-                                        |-                  |-                 |
-| CI1 | Un côté négatif (a < 0)                 | (-1, 3, 3)        | 0                |
-| CI2 | Un côté nul (a = 0)                     | (0, 3, 3)         | 0                |
-| CI3 | Inégalité triangulaire violée : a+b ≤ c | (1, 2, 5)         | 0                |
-| CI4 | Inégalité triangulaire violée : a+c ≤ b | (1, 5, 2)         | 0                |
-| CI5 | Inégalité triangulaire violée : b+c ≤ a | (5, 1, 2)         | 0                |
-
-**Classes valides**
-
-| ID  | Description                             | Exemple (a, b, c) | Résultat attendu |
-|-    |-                                        |-                  |-                 |
-| CV1 | Triangle équilatéral (a == b == c)      | (3, 3, 3)         | 3                |
-| CV2 | Triangle isoscèle (a == b)              | (3, 3, 5)         | 2                |
-| CV3 | Triangle isoscèle (a == c)              | (3, 5, 3)         | 2                |
-| CV4 | Triangle isoscèle (b == c)              | (5, 3, 3)         | 2                |
-| CV5 | Triangle scalène (a != b != c)          | (2, 3, 4)         | 1                |
+|                        | | |
+|-                       |-|-|
+| Valeur de $a$          | $a > 0$ (CV1)                                               | $a \leq 0$ (CI1)                                                |
+| Valeur de $b$          | $b > 0$ (CV2)                                               | $b \leq 0$ (CI2)                                                |
+| Valeur de $c$          | $c > 0$ (CV3)                                               | $c \leq 0$ (CI3)                                                |
+| Inégalité triangulaire | $\begin{cases}a+b > c\\ a+c > b\\ b+c > a\end{cases}$ (CV4) | $\neg\begin{cases}a+b > c\\ a+c > b\\ b+c > a\end{cases}$ (CI4) |
 
 ### 2.2 - Valeurs aux limites
 
-|          |        |        |          |
-|-         |-       |-       |-         |
-| $C_{I2}$ |        |        |          |
-| $C_{I3}$ |        |        |          |
-| $C_3$    | $*J_1$ | $*J_2$ |          |
-|          | $C_4$  | $C_5$  | $C_{I4}$ |
+|     |      |     |     |
+|-    |-     |-    |-    |
+| CI2 |      |     |     |
+| CI3 |      |     |     |
+| CV3 | *J1  | *J2 |     |
+|     | CV4  | CV5 | CV4 |
