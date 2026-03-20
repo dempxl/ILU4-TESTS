@@ -68,3 +68,47 @@ flowchart TB;
     21 -- s --> 23
     22 -- t --> 23
 ```
+
+```java
+public class TraingleClassifier {                         // 1
+                                                          // 1
+    public static int typeTriangle(int a, int b, int c) { // 1
+
+        if (a < 0 || b < 0 || c < 0) // 2
+            return 0; // 3
+        
+        int type = 0; // 4
+
+        if (a == b) // 5
+            type = type + 1; // 6
+
+        if (a == c) // 7
+            type = type + 2; // 8
+
+        if (b == c) // 9
+            type = type + 3; // 10
+
+        if (type == 0) { // 11
+
+            if (a + b <= c || a +  c <= b || b + c <= a) // 12
+                return 0; // 13
+
+            return 1; // 14
+        }             // 14
+
+        if (type > 3) // 15
+            return 3; // 16
+        
+        if (type == 1 && a + b > c) // 17
+            return 2; // 18
+        
+        if (type == 2 && a + c > b) // 19
+            return 2; // 20
+        
+        if (type == 3 && b + c > a) //21
+            return 2; // 22
+        
+        return 0; // 23
+    }             // 23
+                  // 23
+}                 // 23
