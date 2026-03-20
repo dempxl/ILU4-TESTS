@@ -10,7 +10,7 @@
 
 ```mermaid
 %%{init: {'flowchart': {'rankSpacing': 10, 'nodeSpacing': 10}} }%%
-flowchart LR;
+flowchart TB;
     1([1])
     2([2])
     3([3])
