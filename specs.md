@@ -6,7 +6,7 @@
 |-         |-                     |-                                                                                                                             |-       |
 | E1.1a    | $a$ négatif          | $a < 0$, ce qui rend impossible la construction d'un triangle.                                                               | 0      |
 | E1.2b    | $b$ négatif          | $b < 0$, ce qui rend impossible la construction d'un triangle.                                                               | 0      |
-| E1.3c    | $b$ négatif          | $b < 0$, ce qui rend impossible la construction d'un triangle.                                                               | 0      |
+| E1.3c    | $c$ négatif          | $b < 0$, ce qui rend impossible la construction d'un triangle.                                                               | 0      |
 | E1.4a    | $a$ nul              | $a = 0$, ce qui rend impossible la construction d'un triangle.                                                               | 0      |
 | E1.4b    | $b$ nul              | $b = 0$, ce qui rend impossible la construction d'un triangle.                                                               | 0      |
 | E1.4c    | $c$ nul              | $c = 0$, ce qui rend impossible la construction d'un triangle.                                                               | 0      |
@@ -66,8 +66,8 @@ $$
 | VL8  | Borne inf. valide de $c$                | 2   | 2   | 1   | 2              |
 | VL9  | Juste au-dessus de la borne inf. de $c$ | 2   | 2   | 2   | 3              |
 | VL10 | Inég. $a+b$ non respectée               | 2   | 2   | 5   | 0              |
-| VL10 | Inég. $a+b$ respectée                   | 3   | 3   | 5   | 2              |
-| VL13 | Inég. $b+c$ non respectée               | 5   | 2   | 2   | 0              |
-| VL14 | Inég. $b+c$ respectée                   | 5   | 3   | 3   | 2              |
-| VL11 | Inég. $c+a$ non respectée               | 2   | 5   | 2   | 0              |
-| VL12 | Inég. $c+a$ respectée                   | 3   | 5   | 2   | 2              |
+| VL11 | Inég. $a+b$ respectée                   | 3   | 3   | 5   | 2              |
+| VL12 | Inég. $b+c$ non respectée               | 5   | 2   | 2   | 0              |
+| VL13 | Inég. $b+c$ respectée                   | 5   | 3   | 3   | 2              |
+| VL14 | Inég. $c+a$ non respectée               | 2   | 5   | 2   | 0              |
+| VL15 | Inég. $c+a$ respectée                   | 3   | 5   | 3   | 2              |
