@@ -1,23 +1,57 @@
 package classes;
 
-import static org.junit.Assert.assertEquals;
-
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
-
-import org.junit.jupiter.api.Test;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class RunTest {
-	// TODO lire le fichier txt regrouppant tout les test et en ressortir un fichier resultats.txt regrouppant tout les tests 
-	@Test
-	public static void run(FileReader file){
-		// TODO lis le fichier fr et execute les tests
-		
-		// TODO lis le fichier file
+	public static void run(String inputFile){
+		System.out.print("=== Traitement sur " + inputFile + "...");
+		// On créer un fichier de sortie dans le même dossier que le fichier d'entrée
+		Path inputPath = Paths.get(inputFile);
+		Path outputPath = inputPath.getParent() != null ? inputPath.getParent().resolve("valeurs_test_OUT.txt") : Paths.get("valeurs_test_OUT.txt");
+		String outputFile = outputPath.toString();
 
-		// TODO exécute les tests
+		// On initialise le fichier d'entrée et de sortie
+		 try (
+            BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))
+        ) {
+			String ligne;
 
-		// TODO ecrire les resultats dans un fichier resultats.txt
-		
-	}
+			while((ligne = reader.readLine()) != null){
+				// On sépare les valeurs
+				String[] parties = ligne.split(" ");
+
+				if (parties.length != 4){
+					System.out.println("[WARNING] ligne invalide: " + ligne);
+					continue;
+				}
+
+				int a = Integer.parseInt(parties[0]);	// Argument a
+				int b = Integer.parseInt(parties[1]);	// Argument b
+				int c = Integer.parseInt(parties[2]);	// Argument c
+				int res_attendu = Integer.parseInt(parties[3]); // résultat attendu
+
+				// On appel la fonction
+				int res_triangle = TrianglesClassifier.typeTriangle(a, b, c);
+
+				// On compare le résultat avec ce qui est attendu
+				String res_valide = (res_attendu == res_triangle)? "PASS" : "FAIL";
+
+				// On écrit le résultat dans le fichier de sortie
+				writer.write(a + " " + b + " " + c + " -> " + res_triangle +" [" + res_valide + "]");	// Version détaillée
+				// writer.write(res_triangle+"");	// Version compacte
+				writer.newLine();	// Un résultat par ligne
+			}
+			System.out.println("terminé ! ===");
+		}catch (IOException e){
+			e.printStackTrace();
+		}
 	
+	}
 }
