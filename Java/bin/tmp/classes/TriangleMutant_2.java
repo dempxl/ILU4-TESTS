@@ -1,6 +1,8 @@
 package classes;
 
 public class TriangleMutant_2 {
+	private TriangleMutant_2() {}
+
 	public static int typeTriangle(int a, int b, int c) {
 		if (a <= 0 || b < 0 || c <= 0) return 0;
 		int type = 0;

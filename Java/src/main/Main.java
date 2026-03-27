@@ -52,7 +52,8 @@ public class Main {
             String name = "TriangleMutant_" + i++;
             String sourceMute = originalSource
                 .replace(m.avant(), m.apres())
-                .replace("class TrianglesClassifierCorrected", "class " + name);
+                .replace("class TrianglesClassifierCorrected", "class " + name)
+				.replace("TrianglesClassifierCorrected()", name + "()");
             Class<?> mutant = MutantGenerator.generateMutant(sourceMute, name);
             tests.add(new ArgsTest(FILE_IN, FILE_OUT + "_" + name + ".txt", mutant));
         }

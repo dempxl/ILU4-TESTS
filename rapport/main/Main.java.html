@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Main.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">main</a> &gt; <span class="el_source">Main.java</span></div><h1>Main.java</h1><pre class="source lang-java linenums">package main;
+
+import classes.RunTest;
+import classes.TrianglesClassifier;
+import classes.TrianglesClassifierCorrected;
+import classes.MutantGenerator;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public class Main {
+    private Main() {}
+
+<span class="fc" id="L16">    record ArgsTest(String fileIn, String fileOut, Class&lt;?&gt; classifierClass) {}</span>
+<span class="fc" id="L17">    record Mutation(String avant, String apres) {}</span>
+
+    static final String FILE_IN  = &quot;./sources/valeurs_test_IN.txt&quot;;
+    static final String FILE_OUT = &quot;./sources/valeurs_test_OUT&quot;;
+
+<span class="fc" id="L22">    static final Mutation[] MUTATIONS = {</span>
+        new Mutation(&quot;a &lt;= 0&quot;    , &quot;a &lt; 0&quot;     ),
+        new Mutation(&quot;b &lt;= 0&quot;    , &quot;b &lt; 0&quot;     ),
+        new Mutation(&quot;c &lt;= 0&quot;    , &quot;c &lt; 0&quot;     ),
+        new Mutation(&quot;a == b&quot;    , &quot;a != b&quot;    ),
+        new Mutation(&quot;a == c&quot;    , &quot;a != c&quot;    ),
+        new Mutation(&quot;b == c&quot;    , &quot;b != c&quot;    ),
+        new Mutation(&quot;type == 0&quot; , &quot;type != 0&quot; ),
+        new Mutation(&quot;a + b &lt;= c&quot;, &quot;a + b &lt; c&quot; ),
+        new Mutation(&quot;a + c &lt;= b&quot;, &quot;a + c &lt; b&quot; ),
+        new Mutation(&quot;b + c &lt;= a&quot;, &quot;b + c &lt; a&quot; ),
+        new Mutation(&quot;type &gt; 3&quot;  , &quot;type &lt;= 3&quot; ),
+        new Mutation(&quot;type == 1&quot; , &quot;type != 1&quot; ),
+        new Mutation(&quot;a + b &gt; c&quot; , &quot;a + b &lt;= c&quot;),
+        new Mutation(&quot;type == 2&quot; , &quot;type != 2&quot; ),
+        new Mutation(&quot;a + c &gt; b&quot; , &quot;a + c &lt;= b&quot;),
+        new Mutation(&quot;type == 3&quot; , &quot;type != 3&quot; ),
+        new Mutation(&quot;b + c &gt; a&quot; , &quot;b + c &lt;= a&quot;),
+    };
+
+    public static void main(String[] args) throws Exception {
+<span class="fc" id="L43">        List&lt;ArgsTest&gt; tests = new ArrayList&lt;&gt;(List.of(</span>
+            new ArgsTest(FILE_IN, FILE_OUT + &quot;.txt&quot;  , TrianglesClassifier.class),
+            new ArgsTest(FILE_IN, FILE_OUT + &quot;_C.txt&quot;, TrianglesClassifierCorrected.class)
+        ));
+
+<span class="fc" id="L48">        String originalSource = Files.readString(Path.of(&quot;Java/src/classes/TrianglesClassifierCorrected.java&quot;));</span>
+
+<span class="fc" id="L50">        int i = 1;</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        for (Mutation m : MUTATIONS) {</span>
+<span class="fc" id="L52">            String name = &quot;TriangleMutant_&quot; + i++;</span>
+<span class="fc" id="L53">            String sourceMute = originalSource</span>
+<span class="fc" id="L54">                .replace(m.avant(), m.apres())</span>
+<span class="fc" id="L55">                .replace(&quot;class TrianglesClassifierCorrected&quot;, &quot;class &quot; + name)</span>
+<span class="fc" id="L56">				.replace(&quot;TrianglesClassifierCorrected()&quot;, name + &quot;()&quot;);</span>
+<span class="fc" id="L57">            Class&lt;?&gt; mutant = MutantGenerator.generateMutant(sourceMute, name);</span>
+<span class="fc" id="L58">            tests.add(new ArgsTest(FILE_IN, FILE_OUT + &quot;_&quot; + name + &quot;.txt&quot;, mutant));</span>
+        }
+
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        for (ArgsTest t : tests) {</span>
+<span class="fc" id="L62">            System.out.printf(&quot;input : %-45s | output : %-45s | classifier : %s%n&quot;,</span>
+<span class="fc" id="L63">                t.fileIn(), t.fileOut(), t.classifierClass().getSimpleName());</span>
+<span class="fc" id="L64">            RunTest.run(t.fileIn(), t.fileOut(), t.classifierClass());</span>
+<span class="fc" id="L65">        }</span>
+<span class="fc" id="L66">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>
