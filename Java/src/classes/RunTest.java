@@ -13,7 +13,6 @@ public class RunTest {
 	private RunTest(){}
 
 	public static void run(String inputFile, String outputFile, Class<?> classe){
-		System.out.print("=== Traitement sur " + inputFile + "...");
 		Method typeTriangleMethod;
 
 		try {
@@ -37,7 +36,6 @@ public class RunTest {
 				String[] parties = ligne.split(" ");
 
 				if (parties.length != 4){
-					System.out.println("[WARNING] ligne invalide: " + ligne);
 					continue;
 				}
 
@@ -62,7 +60,6 @@ public class RunTest {
 				// writer.write(res_triangle+"");	// Version compacte
 				writer.newLine();	// Un résultat par ligne
 			}
-			System.out.println("terminé ! ===");
 		} catch (IOException e){
 			e.printStackTrace();
 		}
