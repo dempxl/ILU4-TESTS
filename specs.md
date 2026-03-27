@@ -56,13 +56,13 @@ $$
 
 | ID   | Description                             | $a$ | $b$ | $c$ | Retour attendu |
 |-     |-                                        |-    |-    |-    |-               |
-| VL1  | Borne inf. invalide de $a$              | 0   | 2   | 2   | 0              |
+| VL1  | Borne inf. invalide de $a$              | 0   | 2   | 2   | 2              |
 | VL2  | Borne inf. valide de $a$                | 1   | 2   | 2   | 2              |
 | VL3  | Juste au-dessus de la borne inf. de $a$ | 2   | 2   | 2   | 3              |
-| VL4  | Borne inf. invalide de $b$              | 2   | 0   | 2   | 0              |
+| VL4  | Borne inf. invalide de $b$              | 2   | 0   | 2   | 2              |
 | VL5  | Borne inf. valide de $b$                | 2   | 1   | 2   | 2              |
 | VL6  | Juste au-dessus de la borne inf. de $b$ | 2   | 2   | 2   | 3              |
-| VL7  | Borne inf. invalide de $c$              | 2   | 2   | 0   | 0              |
+| VL7  | Borne inf. invalide de $c$              | 2   | 2   | 0   | 2              |
 | VL8  | Borne inf. valide de $c$                | 2   | 2   | 1   | 2              |
 | VL9  | Juste au-dessus de la borne inf. de $c$ | 2   | 2   | 2   | 3              |
 | VL10 | Inég. $a+b$ non respectée               | 2   | 2   | 5   | 0              |
@@ -71,3 +71,6 @@ $$
 | VL13 | Inég. $b+c$ respectée                   | 5   | 3   | 3   | 2              |
 | VL14 | Inég. $c+a$ non respectée               | 2   | 5   | 2   | 0              |
 | VL15 | Inég. $c+a$ respectée                   | 3   | 5   | 3   | 2              |
+
+
+## Question 3 - Couverture
