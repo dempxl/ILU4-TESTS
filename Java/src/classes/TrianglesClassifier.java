@@ -1,6 +1,8 @@
 package classes;
 
 public class TrianglesClassifier {
+	private TrianglesClassifier() {}
+	
 	public static int typeTriangle(int a, int b, int c) {
 		if (a < 0 || b < 0 || c < 0) return 0;
 		int type = 0;

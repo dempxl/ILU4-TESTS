@@ -9,23 +9,20 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class RunTest {
+	private RunTest(){}
+
 	public static void run(String inputFile, String outputFile){
 		System.out.print("=== Traitement sur " + inputFile + "...");
 		// On créer un fichier de sortie dans le même dossier que le fichier d'entrée
 		Path inputPath = Paths.get(inputFile);
 		Path outputPath;
-		if (inputPath.getParent() != null){
-			outputPath = inputPath.getParent().resolve(outputFile);
-		}
-		else{
-			outputPath = Paths.get(outputFile);
-		}
-		
+
 		// On initialise le fichier d'entrée et de sortie
-		 try (
+		try (
             BufferedReader reader = new BufferedReader(new FileReader(inputFile));
             BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))
         ) {
+			outputPath = inputPath.getParent().resolve(outputFile);
 			String ligne;
 
 			while((ligne = reader.readLine()) != null){
@@ -54,7 +51,7 @@ public class RunTest {
 				writer.newLine();	// Un résultat par ligne
 			}
 			System.out.println("terminé ! ===");
-		}catch (IOException e){
+		} catch (IOException e){
 			e.printStackTrace();
 		}
 	
