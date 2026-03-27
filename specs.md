@@ -74,3 +74,8 @@ $$
 
 ## Question 3 - Couverture
 
+| GROUP | PACKAGE | CLASS | INSTRUCTION_MISSED | INSTRUCTION_COVERED | BRANCH_MISSED | BRANCH_COVERED | LINE_MISSED | LINE_COVERED | COMPLEXITY_MISSED | COMPLEXITY_COVERED | METHOD_MISSED | METHOD_COVERED |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| JaCoCo Coverage Report | classes | TrianglesClassifier | 0 | 80 | 0 | 34 | 0 | 14 | 0 | 18 | 0 | 1 |
+
+La suite de test comprend déjà tous les tests nécessaires à une couverture complète.
