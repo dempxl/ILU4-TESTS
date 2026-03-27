@@ -13,7 +13,13 @@ public class RunTest {
 		System.out.print("=== Traitement sur " + inputFile + "...");
 		// On créer un fichier de sortie dans le même dossier que le fichier d'entrée
 		Path inputPath = Paths.get(inputFile);
-		Path outputPath = inputPath.getParent() != null ? inputPath.getParent().resolve("valeurs_test_OUT.txt") : Paths.get("valeurs_test_OUT.txt");
+		Path outputPath;
+		if (inputPath.getParent() != null){
+			outputPath = inputPath.getParent().resolve("valeurs_test_OUT.txt");
+		}
+		else{
+			outputPath = Paths.get("valeurs_test_OUT.txt");
+		}
 		String outputFile = outputPath.toString();
 
 		// On initialise le fichier d'entrée et de sortie
