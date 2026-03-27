@@ -9,19 +9,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class RunTest {
-	public static void run(String inputFile){
+	public static void run(String inputFile, String outputFile){
 		System.out.print("=== Traitement sur " + inputFile + "...");
 		// On créer un fichier de sortie dans le même dossier que le fichier d'entrée
 		Path inputPath = Paths.get(inputFile);
 		Path outputPath;
 		if (inputPath.getParent() != null){
-			outputPath = inputPath.getParent().resolve("valeurs_test_OUT.txt");
+			outputPath = inputPath.getParent().resolve(outputFile);
 		}
 		else{
-			outputPath = Paths.get("valeurs_test_OUT.txt");
+			outputPath = Paths.get(outputFile);
 		}
-		String outputFile = outputPath.toString();
-
+		
 		// On initialise le fichier d'entrée et de sortie
 		 try (
             BufferedReader reader = new BufferedReader(new FileReader(inputFile));
