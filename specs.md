@@ -54,28 +54,40 @@ $$
 
 ### 2.2 - Valeurs aux limites
 
-| ID   | Description                             | $a$ | $b$ | $c$ | Retour attendu |
-|-     |-                                        |-    |-    |-    |-               |
-| VL1  | Borne inf. invalide de $a$              | 0   | 2   | 2   | 0              |
-| VL2  | Borne inf. valide de $a$                | 1   | 2   | 2   | 2              |
-| VL3  | Juste au-dessus de la borne inf. de $a$ | 2   | 2   | 2   | 3              |
-| VL4  | Borne inf. invalide de $b$              | 2   | 0   | 2   | 0              |
-| VL5  | Borne inf. valide de $b$                | 2   | 1   | 2   | 2              |
-| VL6  | Juste au-dessus de la borne inf. de $b$ | 2   | 2   | 2   | 3              |
-| VL7  | Borne inf. invalide de $c$              | 2   | 2   | 0   | 0              |
-| VL8  | Borne inf. valide de $c$                | 2   | 2   | 1   | 2              |
-| VL9  | Juste au-dessus de la borne inf. de $c$ | 2   | 2   | 2   | 3              |
-| VL10 | Inég. $a+b$ non respectée               | 2   | 2   | 5   | 0              |
-| VL11 | Inég. $a+b$ respectée                   | 3   | 3   | 5   | 2              |
-| VL12 | Inég. $b+c$ non respectée               | 5   | 2   | 2   | 0              |
-| VL13 | Inég. $b+c$ respectée                   | 5   | 3   | 3   | 2              |
-| VL14 | Inég. $c+a$ non respectée               | 2   | 5   | 2   | 0              |
-| VL15 | Inég. $c+a$ respectée                   | 3   | 5   | 3   | 2              |
+| ID   | Description                             | $a$ | $b$ | $c$ | Retour attendu | Retour réel |
+|-     |-                                        |-    |-    |-    |-               |-            |
+| VL1  | Borne inf. invalide de $a$              | 0   | 2   | 2   | 0              | 2           |
+| VL2  | Borne inf. valide de $a$                | 1   | 2   | 2   | 2              | 2           |
+| VL3  | Juste au-dessus de la borne inf. de $a$ | 2   | 2   | 2   | 3              | 3           |
+| VL4  | Borne inf. invalide de $b$              | 2   | 0   | 2   | 0              | 2           |
+| VL5  | Borne inf. valide de $b$                | 2   | 1   | 2   | 2              | 2           |
+| VL6  | Juste au-dessus de la borne inf. de $b$ | 2   | 2   | 2   | 3              | 3           |
+| VL7  | Borne inf. invalide de $c$              | 2   | 2   | 0   | 0              | 2           |
+| VL8  | Borne inf. valide de $c$                | 2   | 2   | 1   | 2              | 2           |
+| VL9  | Juste au-dessus de la borne inf. de $c$ | 2   | 2   | 2   | 3              | 3           |
+| VL10 | Inég. $a+b$ non respectée               | 2   | 2   | 5   | 0              | 0           |
+| VL11 | Inég. $a+b$ respectée                   | 3   | 3   | 5   | 2              | 2           |
+| VL12 | Inég. $b+c$ non respectée               | 5   | 2   | 2   | 0              | 0           |
+| VL13 | Inég. $b+c$ respectée                   | 5   | 3   | 3   | 2              | 2           |
+| VL14 | Inég. $c+a$ non respectée               | 2   | 5   | 2   | 0              | 0           |
+| VL15 | Inég. $c+a$ respectée                   | 3   | 5   | 3   | 2              | 2           |
+| VL16 | Triangle part. nul $a$, $b$             | 0   | 0   | 1   | 0              | 0           |
+| VL17 | Triangle part. nul $b$, $c$             | 1   | 0   | 0   | 0              | 0           |
+| VL18 | Triangle part. nul $c$, $a$             | 0   | 1   | 0   | 0              | 0           |
+| VL19 | Triangle nul                            | 0   | 0   | 0   | 0              | 3           |
 
-## Question 3 - Couverture
+## Question 4 - Couverture
 
 | GROUP | PACKAGE | CLASS | INSTRUCTION_MISSED | INSTRUCTION_COVERED | BRANCH_MISSED | BRANCH_COVERED | LINE_MISSED | LINE_COVERED | COMPLEXITY_MISSED | COMPLEXITY_COVERED | METHOD_MISSED | METHOD_COVERED |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | JaCoCo Coverage Report | classes | TrianglesClassifier | 0 | 80 | 0 | 34 | 0 | 14 | 0 | 18 | 0 | 1 |
 
+## Question 5a - Conclusion couverture
+
 La suite de test comprend déjà tous les tests nécessaires à une couverture complète.
+
+## Question 5b - Conclusion tests
+
+Oui, il y a deux cas spécifiques qui produisent un fail, montrant une mauvaise conception de la fonction testée :
+- Triangle nul ($a = b = c = 0$). Dans ce cas, la fonction retourne 3 au lieu de 0, ce qui est incorrect car un triangle avec des côtés nuls ne peut pas exister. Ce cas correspond à l'exigence E1.4a (ou E1.4b ou E1.4c) combinée avec l'exigence E1.5a (ou E1.5b ou E1.5c).
+- Triangle isocèle avec un côté nul. Dans ce cas, la fonction retourne 2 au lieu de 0, ce qui est incorrect car un triangle avec un côté nul ne peut pas exister. Ce cas correspond à l'exigence E1.4a (ou E1.4b ou E1.4c) combinée avec l'exigence E3.1c (ou E3.2a ou E3.3b).
