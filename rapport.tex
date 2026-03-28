@@ -1,0 +1,520 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[top=2cm, bottom=2cm, left=2cm, right=2cm]{geometry}\usepackage[T1]{fontenc}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{textcomp}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{pifont}
+\usepackage{textgreek}
+\usepackage{tabularx}
+\usepackage{minted}
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+
+\setminted{
+    frame=lines,
+    framesep=2mm,
+    bgcolor=lightgray,
+    breaklines=true
+}
+
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+
+\title{Rapport de TP ILU4~--~Tests fonctionnels et structurels}
+\author{Logan Larroux, Loay Younes, \href{mailto:manolo.sardo@example.com}{Manolo Sardó}\\\href{https://univ-tlse3.fr}{Université de Toulouse}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\begin{abstract}
+    Nous avons analysé la fonction \mintinline{text}`TrianglesClassifier` à travers une approche combinée de tests fonctionnels (classes d'équivalence, valeurs aux limites) et de tests structurels (couverture JaCoCo, test de mutation). Nous avons identifié un défaut dans l'implémentation originale, démontré la capacité des tests aux limites à le révéler, et utilisé le test de mutation pour mettre en lumière une lacune dans la suite de tests. Enfin, nous avons discuté des implications de ces résultats sur la qualité du programme et l'efficacité des techniques de test employées.
+\end{abstract}
+
+\newpage
+
+\section*{Introduction}
+
+Ce rapport présente une analyse détaillée de la fonction \mintinline{text}`TrianglesClassifier`, qui classifie un triangle en fonction des longueurs de ses côtés. Nous avons suivi une méthodologie rigoureuse pour définir les spécifications fonctionnelles, construire une suite de tests exhaustive, mesurer la couverture structurelle, et évaluer la robustesse de la suite via un test de mutation. Les résultats obtenus permettent d'identifier les défauts présents dans l'implémentation originale et d'évaluer l'efficacité des différentes techniques de test utilisées.
+
+\begin{minted}{java}
+int typeTriangle(int a, int b, int c) {
+    if(a < 0 || b < 0 || c < 0) return 0;
+    int type = 0;
+    if(a == b) type+=1;
+    if(a == c) type+=2;
+    if(b == c) type+=3;
+    if(type == 0) {
+        if(a + b <= c || a + c <= b || b + c <= a)
+            return 0;
+        return 1;
+    }
+    if(type > 3) return 3;
+    if(type == 1 && a + b > c) return 2;
+    if(type == 2 && a + c > b) return 2;
+    if(type == 3 && b + c > a) return 2;
+    
+    return 0;
+}
+\end{minted}
+
+\section{Spécifications fonctionnelles}
+
+\subsection{Contexte}
+
+La fonction reçoit trois entiers $a$, $b$, et $c$ représentant les longueurs des côtés d'un triangle.
+
+\begin{center}
+\begin{tabularx}{\textwidth}{|l|l|X|c|}
+    \hline
+    \bf Exigence & \bf Description & \bf Détail & \bf Retour \\
+    \hline
+    \hline
+    E1.1a & $a$ négatif & $a < 0$, ce qui rend impossible la construction d'un triangle. & 0 \\
+    \hline
+    E1.2b & $b$ négatif & $b < 0$, ce qui rend impossible la construction d'un triangle. & 0 \\
+    \hline
+    E1.3c & $c$ négatif & $c < 0$, ce qui rend impossible la construction d'un triangle. & 0 \\
+    \hline
+    E1.4a & $a$ nul & $a = 0$, ce qui rend impossible la construction d'un triangle. & 0 \\
+    \hline
+    E1.4b & $b$ nul & $b = 0$, ce qui rend impossible la construction d'un triangle. & 0 \\
+    \hline
+    E1.4c & $c$ nul & $c = 0$, ce qui rend impossible la construction d'un triangle. & 0 \\
+    \hline
+    E1.5c & Inég. $a+b$ non resp. & $a+b \leq c$, ce qui rend impossible la construction d'un triangle. & 0 \\
+    \hline
+    E1.5a & Inég. $b+c$ non resp. & $b+c \leq a$, ce qui rend impossible la construction d'un triangle. & 0 \\
+    \hline
+    E1.5b & Inég. $c+a$ non resp. & $c+a \leq b$, ce qui rend impossible la construction d'un triangle. & 0 \\
+    \hline
+    E2 & Triangle scalène & $a \neq b$, $b \neq c$, $a \neq c$, triangle avec trois côtés de longueurs toutes différentes. & 1 \\
+    \hline
+    E3.1c & Isocèle $a=b \neq c$ & $a = b \neq c$, triangle avec exactement deux côtés de même longueur. & 2 \\
+    \hline
+    E3.2a & Isocèle $a=c \neq b$ & $a = c \neq b$, triangle avec exactement deux côtés de même longueur. & 2 \\
+    \hline
+    E3.3b & Isocèle $b=c \neq a$ & $b = c \neq a$, triangle avec exactement deux côtés de même longueur. & 2 \\
+    \hline
+    E4 & Triangle équilatéral & $a = b = c$, triangle avec trois côtés de même longueur. & 3 \\
+    \hline
+\end{tabularx}
+\end{center}
+
+\subsection{Conditions de validité d'un triangle}
+
+Tous les côtés doivent être strictement positifs~:
+$$\begin{cases} a > 0 \\ b > 0 \\ c > 0 \end{cases}$$
+
+L'inégalité triangulaire doit être vérifiée~:
+$$\begin{cases} a + b > c \\ a + c > b \\ b + c > a \end{cases}$$
+
+\subsection{Graphe de flot de contrôle}
+
+\label{flow}
+
+Pour mieux visualiser les chemins d'exécution possibles, nous avons construit le graphe de flot de contrôle de la fonction \mintinline{text}`typeTriangle`. Chaque noeud représente une instruction ou un bloc d'instructions, et chaque arc représente une transition possible entre ces blocs en fonction des conditions évaluées.
+
+\begin{minted}{java}
+public static int typeTriangle(int a, int b, int c) { // 1
+    if(a < 0 || b < 0 || c < 0)                       // 2
+        return 0;                                     // 3
+    int type = 0;                                     // 4
+    if(a == b)                                        // 5
+        type = type + 1;                              // 6
+    if(a == c)                                        // 7
+        type = type + 2;                              // 8
+    if(b == c)                                        // 9
+        type = type + 3;                              // 10
+    if(type == 0) {                                   // 11
+        if(a + b <= c || a +  c <= b || b + c <= a)   // 12
+            return 0;                                 // 13
+        return 1;                                     // 14
+    }                                                 // 14
+    if(type > 3)                                      // 15
+        return 3;                                     // 16
+    if(type == 1 && a + b > c)                        // 17
+        return 2;                                     // 18
+    if(type == 2 && a + c > b)                        // 19
+        return 2;                                     // 20
+    if(type == 3 && b + c > a)                        // 21
+        return 2;                                     // 22
+    return 0;                                         // 23
+}                                                     // 23
+\end{minted}
+
+\begin{center}
+\begin{tikzpicture}
+    \node[draw, circle] (1)  at (0,0)   {1};
+    \node[draw, circle] (2)  at (1,2)  {2};
+    \node[draw, circle] (3)  at (2,0)  {3};
+    \node[draw, circle] (4)  at (3,2)  {4};
+    \node[draw, circle] (5)  at (4,0)  {5};
+    \node[draw, circle] (6)  at (5,2)  {6};
+    \node[draw, circle] (7)  at (6,0)  {7};
+    \node[draw, circle] (8)  at (7,2)  {8};
+    \node[draw, circle] (9)  at (8,0) {9};
+    \node[draw, circle] (10) at (9,2)  {10};
+    \node[draw, circle] (11) at (10,0) {11};
+    \node[draw, circle] (12) at (11,2) {12};
+    \node[draw, circle] (13) at (12,1) {13};
+    \node[draw, circle] (14) at (13,2) {14};
+    \node[draw, circle] (15) at (14,0) {15};
+    \node[draw, circle] (16) at (16,-1) {16};
+    \node[draw, circle] (17) at (14,-2) {17};
+    \node[draw, circle] (18) at (13,-4) {18};
+    \node[draw, circle] (19) at (12,-2) {19};
+    \node[draw, circle] (20) at (11,-4) {20};
+    \node[draw, circle] (21) at (10,-2) {21};
+    \node[draw, circle] (22) at (9,-4) {22};
+    \node[draw, double, circle] (23) at (8,-2) {23};
+
+    \draw[-latex] (1)  -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (2);
+    \draw[-latex] (2)  -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (3);
+    \draw[-latex] (2)  -- node[circle,fill=darkgray,inner sep=1pt,text=white] {s} (4);
+    \draw[-latex] (3)  -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (4);
+    \draw[-latex] (4)  -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (5);
+    \draw[-latex] (5)  -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (6);
+    \draw[-latex] (5)  -- node[circle,fill=darkgray,inner sep=1pt,text=white] {s} (7);
+    \draw[-latex] (6)  -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (7);
+    \draw[-latex] (7)  -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (8);
+    \draw[-latex] (7)  -- node[circle,fill=darkgray,inner sep=1pt,text=white] {s} (9);
+    \draw[-latex] (8)  -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (9);
+    \draw[-latex] (9)  -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (10);
+    \draw[-latex] (9)  -- node[circle,fill=darkgray,inner sep=1pt,text=white] {s} (11);
+    \draw[-latex] (10) -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (11);
+    \draw[-latex] (11) -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (12);
+    \draw[-latex] (11) -- node[circle,fill=darkgray,inner sep=1pt,text=white] {s} (15);
+    \draw[-latex] (12) -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (13);
+    \draw[-latex] (12) -- node[circle,fill=darkgray,inner sep=1pt,text=white] {s} (14);
+    \draw[-latex] (13) -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (14);
+    \draw[-latex] (14) -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (15);
+    \draw[-latex] (15) -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (16);
+    \draw[-latex] (15) -- node[circle,fill=darkgray,inner sep=1pt,text=white] {s} (17);
+    \draw[-latex] (16) -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (17);
+    \draw[-latex] (17) -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (18);
+    \draw[-latex] (17) -- node[circle,fill=darkgray,inner sep=1pt,text=white] {s} (19);
+    \draw[-latex] (18) -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (19);
+    \draw[-latex] (19) -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (20);
+    \draw[-latex] (19) -- node[circle,fill=darkgray,inner sep=1pt,text=white] {s} (21);
+    \draw[-latex] (20) -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (21);
+    \draw[-latex] (21) -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (22);
+    \draw[-latex] (21) -- node[circle,fill=darkgray,inner sep=1pt,text=white] {s} (23);
+    \draw[-latex] (22) -- node[circle,fill=darkgray,inner sep=1pt,text=white] {t} (23);
+\end{tikzpicture}
+\end{center}
+
+\section{Suite de tests}
+
+\label{tests}
+
+\subsection{Classes d'équivalence}
+
+\begin{center}
+\begin{tabular}{|l|c|c|}
+\hline
+\bf Paramètre & \bf Classe valide & \bf Classe invalide\\
+\hline
+\hline
+Valeur de $a$ & $a > 0$ (CV1) & $a \leq 0$ (CI1)\\
+\hline
+Valeur de $b$ & $b > 0$ (CV2) & $b \leq 0$ (CI2)\\
+\hline
+Valeur de $c$ & $c > 0$ (CV3) & $c \leq 0$ (CI3)\\
+\hline
+Inégalité triangulaire & $\begin{cases}a+b > c\\a+c > b\\b+c > a\end{cases}$ (CV4) & $\begin{cases}\neg(a+b > c)\\a+c > b\\b+c > a)\end{cases}$ (CI4)\\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Valeurs aux limites}
+
+\label{limits}
+
+\begin{center}
+\begin{tabular}{|l|l|c|c|c|c|l|}
+\hline
+    \bf ID & \bf Description & $a$ & $b$ & $c$ & \bf Attendu & \bf \mintinline{text}`TrianglesClassifier`\\
+    \hline
+    \hline
+    VL1 & Borne inf. invalide de $a$ & 0 & 2 & 2 & 0 & 2 \ding{55} (isocèle à côté nul)\\
+    \hline
+    VL2 & Borne inf. valide de $a$ & 1 & 2 & 2 & 2 & 2 \checkmark\\
+    \hline
+    VL3 & Juste au-dessus de la borne inf. de $a$ & 2 & 2 & 2 & 3 & 3 \checkmark\\
+    \hline
+    VL4 & Au niveau de la borne inf. de $b$ & 2 & 4 & 2 & 0 & 0 \checkmark (triangle plat)\\
+    \hline
+    VL5 & Borne inf. invalide de $b$ & 2 & 0 & 2 & 0 & 2 \ding{55} (isocèle à côté nul)\\
+    \hline
+    VL6 & Borne inf. valide de $b$ & 2 & 1 & 2 & 2 & 2 \checkmark\\
+    \hline
+    VL7 & Juste au-dessus de la borne inf. de $b$ & 2 & 2 & 2 & 3 & 3 \checkmark\\
+    \hline
+    VL8 & Au niveau de la borne inf. de $c$ & 2 & 2 & 4 & 0 & 0 \checkmark (triangle plat)\\
+    \hline
+    VL9 & Borne inf. invalide de $c$ & 2 & 2 & 0 & 0 & 2 \ding{55} (isocèle à côté nul)\\
+    \hline
+    VL10 & Borne inf. valide de $c$ & 2 & 2 & 1 & 2 & 2 \checkmark\\
+    \hline
+    VL11 & Juste au-dessus de la borne inf. de $c$ & 2 & 2 & 2 & 3 & 3 \checkmark\\
+    \hline
+    VL12 & Au niveau de la borne inf. de $a$ & 4 & 2 & 2 & 0 & 0 \checkmark (triangle plat)\\
+    \hline
+    VL13 & Inég. $a+b$ non respectée & 2 & 2 & 5 & 0 & 0 \checkmark\\
+    \hline
+    VL14 & Inég. $a+b$ respectée & 3 & 3 & 5 & 2 & 2 \checkmark\\
+    \hline
+    VL15 & Inég. $b+c$ non respectée & 5 & 2 & 2 & 0 & 0 \checkmark\\
+    \hline
+    VL16 & Inég. $b+c$ respectée & 5 & 3 & 3 & 2 & 2 \checkmark\\
+    \hline
+    VL17 & Inég. $c+a$ non respectée & 2 & 5 & 2 & 0 & 0 \checkmark\\
+    \hline
+    VL18 & Inég. $c+a$ respectée & 3 & 5 & 3 & 2 & 2 \checkmark\\
+    \hline
+    VL19 & Triangle partiellement nul ($a$, $b$) & 0 & 0 & 1 & 0 & 0 \checkmark\\
+    \hline
+    VL20 & Triangle partiellement nul ($b$, $c$) & 1 & 0 & 0 & 0 & 0 \checkmark\\
+    \hline
+    VL21 & Triangle partiellement nul ($c$, $a$) & 0 & 1 & 0 & 0 & 0 \checkmark\\
+    \hline
+    VL22 & Triangle nul & 0 & 0 & 0 & 0 & 3 \ding{55} (triangle nul)\\
+    \hline
+    VL23 & Triangle scalène plat ($a + b = c$) & 1 & 2 & 3 & 0 & 0 \checkmark\\
+    \hline
+    VL24 & Triangle scalène plat ($b + c = a$) & 2 & 3 & 1 & 0 & 0 \checkmark\\
+    \hline
+    VL25 & Triangle scalène plat ($c + a = b$) & 3 & 1 & 2 & 0 & 0 \checkmark\\
+    \hline
+\end{tabular}
+\end{center}
+
+\section{Couverture}
+
+\subsection{Recodage de la fonction}
+
+La mesure de couverture est effectuée sur la suite de tests définie en section \ref{tests}, mais en distinguant deux versions de la fonction~:
+
+\begin{itemize}[label=$\bullet$]
+    \item \mintinline{text}`TrianglesClassifier`~: l'implémentation originale fournie dans l'énoncé, qui contient un défaut (utilisation de \mintinline{text}`< 0` au lieu de \mintinline{text}`<= 0` pour la validation des côtés).
+    \item \mintinline{text}`TrianglesClassifierCorrected`~: une version corrigée développée par nos soins, dans laquelle la condition de garde est remplacée par \mintinline{text}`a <= 0 || b <= 0 || c <= 0`.
+\end{itemize}
+
+Ce recodage est nécessaire pour deux raisons. D'abord, la version originale présente des comportements incorrects sur les cas aux limites (isocèles à côté nul et triangle nul), ce qui laisse certaines branches structurellement atteignables dans la spécification, mais jamais exercées dans la pratique. Ensuite, le test de mutation (section \ref{mutants}) s'appuie sur la version corrigée comme référence~: générer des mutants à partir d'une base défectueuse reviendrait à mesurer l'écart par rapport à un comportement lui-même erroné.
+
+\begin{minted}{java}
+int typeTriangle(int a, int b, int c) {
+    if(a <= 0 || b <= 0 || c <= 0) return 0;
+    int type = 0;
+    if(a == b) type+=1;
+    if(a == c) type+=2;
+    if(b == c) type+=3;
+    if(type == 0) {
+        if(a + b <= c || a + c <= b || b + c <= a)
+            return 0;
+        return 1;
+    }
+    if(type > 3) return 3;
+    if(type == 1 && a + b > c) return 2;
+    if(type == 2 && a + c > b) return 2;
+    if(type == 3 && b + c > a) return 2;
+    
+    return 0;
+}
+\end{minted}
+
+\subsection{Résultats de couverture (JaCoCo)}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{|l|C|C|C|C|C|C|C|C|}
+    \hline
+    \bf Classe &
+    \bf \rotatebox{90}{\parbox{3cm}{\centering Instructions\\ manquées}} &
+    \bf \rotatebox{90}{\parbox{3cm}{\centering Instructions\\ couvertes}} &
+    \bf \rotatebox{90}{\parbox{3cm}{\centering Branches\\ manquées}} &
+    \bf \rotatebox{90}{\parbox{3cm}{\centering Branches\\ couvertes}} &
+    \bf \rotatebox{90}{\parbox{3cm}{\centering Lignes\\ manquées}} &
+    \bf \rotatebox{90}{\parbox{3cm}{\centering Lignes\\ couvertes}} &
+    \bf \rotatebox{90}{\parbox{3cm}{\centering Complexités\\ manquées}} &
+    \bf \rotatebox{90}{\parbox{3cm}{\centering Complexités\\ couvertes}}\\
+    \hline
+    \hline
+    \bf Original & 2 & 78 & 4 & 30 & 1 & 13 & 4 & 14 \\
+    \hline
+    \bf Corrigé & 0 & 80 & 0 & 34 & 0 & 14 & 0 & 18 \\
+    \hline
+\end{tabularx}
+\end{center}
+
+\subsection{Analyse}
+
+La suite de tests atteint une \textbf{couverture totale} (instructions, branches, lignes, complexité cyclo\-matique) sur la version corrigée \mintinline{text}`TrianglesClassifierCorrected`. Cela confirme que les cas de test construits en section \ref{tests} sont suffisants pour exercer l'intégralité du flot de contrôle de la fonction spécifiée.
+
+Sur la version originale \mintinline{text}`TrianglesClassifier`, trois branches restent partiellement couvertes, et une non couverte. Ces branches correspondent aux dernières conditions du code, composées de \mintinline{text}`&&` (\textit{"et court-circuité"}), dans lesquelles la première condition est évaluée à \mintinline{text}`false` (ex. \mintinline{text}`type == 1`), ce qui empêche l'évaluation de la seconde condition (\mintinline{text}`a + b > c`) et donc l'exercice de la branche \mintinline{text}`true` correspondante. Le dernier noeud n'est structurellement pas atteignable sans modifier la condition de garde.
+
+Le graphe de flot de contrôle de la section \ref{flow} permet de visualiser ces résultats. Chaque noeud et chaque arc est exercé dans la version corrigée, ce qui correspond à une couverture complète des 23 noeuds et 26 arcs. En revanche, dans la version originale, les arcs issus du noeud 2 ne sont pas tous empruntés correctement~: le chemin menant au retour 0 (noeud 3) n’est jamais suivi pour les valeurs nulles, ce qui explique les branches manquantes relevées par JaCoCo.
+
+\section{Détection de défauts}
+
+Deux cas d'entrée produisent un résultat incorrect dans \mintinline{text}`TrianglesClassifier`~:
+
+\begin{description}
+    \item[Cas 1~--~Triangle nul~:] La fonction retourne $3$ au lieu de $0$. L'implé\-mentation ne rejette pas les valeurs nulles (condition \mintinline{text}`< 0` strictement négative), si bien que \mintinline{text}`a = b = c = 0` passe la condition de garde, accumule \mintinline{text}`type = 6` ($1 + 2 + 3$), puis déclenche \mintinline{text}`type > 3` $\to$ \mintinline{text}`return 3`. Ce cas combine les exigences E1.4a, E1.4b, E1.4c et E1.5a, E1.5b, E1.5c.
+    \item[Cas 2~--~Triangle isocèle à côté nul~] La fonction retourne $2$ au lieu de $0$. Pour le même motif, la condition de garde ne filtre pas les zéros~: \mintinline{text}`a = 0, b = 2, c = 2` donne \mintinline{text}`type = 3` (car \mintinline{text}`b == c`), puis \mintinline{text}`b + c > a` est vrai $\to$ \mintinline{text}`return 2`. Ce cas combine E1.4a (ou E1.4b/E1.4c) avec E3.3b (ou E3.1c/E3.2a).
+\end{description}
+
+Ces deux anomalies sont détectées par les tests aux limites (VL1, VL5, VL9, VL122), qui ciblent précisément la borne inférieure du domaine de validité des côtés.
+
+\section{Script de test}
+
+\subsection{Architecture générale}
+
+Le script de test est implémenté en Java et se compose de quatre éléments principaux~:
+
+\begin{description}
+    \item[ITriangleClassifier~:] interface fonctionnelle (avec \mintinline{text}`@FunctionalInterface`) définissant la signature \mintinline{text}`int classify(int a, int b, int c)`. Elle permet de passer n'importe quelle implémentation --~originale, corrigée ou mutante~-- comme paramètre de méthode via une référence de méthode ou une lambda.
+    \item[RunTest~:] classe utilitaire qui lit un fichier de tests au format \mintinline{text}`a b c résultat_attendu` (un cas par ligne), invoque le classificateur sur chaque triplet, compare le résultat obtenu au résultat attendu, et produit un fichier de sortie listant chaque cas avec son verdict \mintinline{text}`PASS` ou \mintinline{text}`FAIL`. La méthode accepte un paramètre \mintinline{text}`lazy`~: en mode paresseux, l'exécution s'interrompt dès le premier échec, sans écrire de fichier de sortie. Ce comportement est exploité dans \mintinline{text}`Main` pour ne conserver que les mutants qui passent l'intégralité de la suite et ainsi éviter de parasiter l'analyse avec des mutants manifestement défectueux.
+    \item[MutantGenerator~:] classe qui génère dynamiquement des mutants à partir du code source de \mintinline{text}`TrianglesClassifierCorrected`. Pour chaque mutation (ou combinaison de mutations), elle effectue un remplacement textuel dans le source, compile le résultat en mémoire via l'API \mintinline{text}`javax.tools.JavaCompiler`, charge la classe générée dans un \mintinline{text}`URLClassLoader` isolé, et re\-tourne une instance de \mintinline{text}`ITriangleClassifier` par réflexion. Cette approche évite toute dépend\-ance à un outil externe de mutation, ce qui permet une grande maléabilité dans les mutations, ainsi qu'une comptabilité directe avec JaCoCo.
+    \item[Main~:] point d'entrée orchestrant l'ensemble. Il construit la liste de tous les cas à tester --~les deux implémentations de référence, puis les 28 mutants simples, puis les $28 \times 28 = 784$ mutants doubles~-- et exécute \mintinline{text}`RunTest` sur chacun. Seuls les mutants ayant passé tous les tests (mode \mintinline{text}`lazy`) sont affichés dans le rapport final.
+\end{description}
+
+\subsection{Format des fichiers de test}
+
+Le fichier d'entrée (\mintinline{text}`valeurs_test_IN.txt`) contient une ligne par cas de test, au format~:
+
+\begin{minted}{text}
+a b c résultat_attendu
+\end{minted}
+
+Le fichier de sortie produit par \mintinline{text}`RunTest` reprend chaque cas sous la forme~:
+
+\begin{minted}{text}
+a b c -> résultat_obtenu [PASS|FAIL]
+\end{minted}
+
+\subsection{Choix de conception}
+
+\label{choice}
+
+L'usage d'une interface fonctionnelle pour le classificateur rend le script indépendant de toute implémentation concrète. L'ajout d'un nouveau mutant ne nécessite que d'enrichir la table \mintinline{text}`MUTATIONS` dans \mintinline{text}`Main`~; aucune modification du moteur de test n'est requise. La compilation dynamique dans `MutantGenerator` permet d'exécuter l'intégralité du cycle (génération, compilation, chargement, test) en une seule passe JVM, ce qui facilite également l'instrumentation JaCoCo sur les classes mutantes.
+
+Dans un premier temps, les mutants sont créés, compilés et stockés dans une liste. Puis, tous les tests sur tous les mutants sont exécutés. Cette approche en deux étapes est inefficace, car elle génère et compile les mutants et les stocke sans savoir s'ils survivront ou non. Le \textit{"faible"} nombre de mutants (812) rend cependant ce choix moins catastrophique que s'il avait été question de dizaines de milliers de mutants. Une optimisation possible serait de générer et tester les mutants un par un, en mode \mintinline{text}`lazy`, pour éviter de stocker des mutants manifestement défectueux.
+
+\section{Test de mutation}
+
+\label{mutants}
+
+\subsection{Création des mutants}
+
+Les mutants ont été produits manuellement en appliquant des \textbf{opérateurs de mutation relation\-nels} à la version corrigée \mintinline{text}`TrianglesClassifierCorrected`. Les opérateurs utilisés remplacent chaque opérateur de comparaison (\mintinline{text}`<=`, \mintinline{text}`<`, \mintinline{text}`==`, \mintinline{text}`!=`, \mintinline{text}`>`, \mintinline{text}`>=`) par un autre opérateur de la même famille, sur chaque condition de la fonction.
+
+Vingt-huit mutations élémentaires ont été définies (table \mintinline{text}`MUTATIONS` dans \mintinline{text}`Main`). Elles ciblent~:
+
+\begin{itemize}[label=$\bullet$]
+    \item la condition de garde ($a \le 0$, $b \le 0$, $c \le 0$),
+    \item les conditions d'égalité pour la détection du type ($a = b$, $a = c$, $b = c$),
+    \item les inégalités triangulaires ($a + b \le c$, etc.),
+    \item les seuils de discrimination du type final ($\text{type} = 0$, $\text{type} > 3$, $\text{type} = 1$, $\text{type} = 2$, $\text{type} = 3$) et leurs inverses.
+\end{itemize}
+
+En plus des 28 mutants d'ordre 1, tous les couples de mutations ont été générés, soit $28 \times 28 = 784$ mutants d'ordre 2, pour un total de \textbf{812 mutants}.
+
+Le choix de ne pas utiliser d'outil dédié (PIT, \textmu Java, etc.) est motivé par deux raisons (déjà mentionnées dans la section \ref{choice})~:
+
+\begin{itemize}[label=$\bullet$]
+    \item D'une part, cela permet un contrôle précis sur les mutations appliquées et leur encodage dans le nom de la classe générée, ce qui est nécessaire pour corréler les résultats de mutation avec les rapports JaCoCo individuels.
+    \item D'autre part, la génération dynamique via \mintinline{text}`MutantGenerator` permet d'instrumenter chaque classe mutante avec JaCoCo dans le même processus JVM, sans configuration externe supplémen\-taire.
+\end{itemize}
+
+\subsection{Mutants survivants}
+
+Un mutant est dit \textbf{survivant} s'il passe l'intégralité de la suite de tests~--~c'est-à-dire que, pour chaque cas de test, il produit le même résultat que la spécification. Un mutant survivant révèle une lacune de la suite~: il existe un défaut que les tests ne détectent pas~; ou dans la perspective inverse, la structure de l'implémentation est suffisamment incorrecte pour que les tests ne puissent pas distinguer le comportement du mutant de celui de la version corrigée.
+
+Parmi les 812 mutants générés, \textbf{aucun ne survit}. Tous sont tués par au moins un cas de test. Les tests aux limites (VL1, VL5, VL9, VL22) détectent les mutations sur la condition de garde.
+
+Certains tests se montrent essentiels pour tuer des mutants spécifiques. Par exemple, les tests VL23, VL24 et VL25 servent à tuer les mutants ayant ces mutations élémentaires~:
+
+\begin{center}
+\begin{tabular}{|l|c|}
+    \hline
+    \bf Mutation & \bf Transformation \\
+    \hline
+    \hline
+    \mintinline{text}`MaPbLEc_to_aPbLTc` & $a + b \le c \to a + b < c$\\
+    \hline
+    \mintinline{text}`MaPcLEb_to_aPcLTb` & $a + c \le b \to a + c < b$\\
+    \hline
+    \mintinline{text}`MbPcLEa_to_bPcLTa` & $b + c \le a \to b + c < a$\\
+    \hline
+\end{tabular}
+\end{center}
+
+Ou une combinaison de mutations élémentaires~:
+
+\begin{center}
+\begin{tabular}{|l|c|}
+    \hline
+    \bf Mutation & \bf Transformation \\
+    \hline
+    \hline
+    \mintinline{text}`MaPbLEc_to_aPbLTc` & $a + b \le c \to a + b < c$\\
+    \hline
+    \mintinline{text}`MaPcLEb_to_aPcLTb` & $a + c \le b \to a + c < b$\\
+    \hline
+    \mintinline{text}`MbPcLEa_to_bPcLTa` & $b + c \le a \to b + c < a$\\
+    \hline
+    \mintinline{text}`MaPbLEc_to_aPbGTc` & $a + b \le c \to a + b > c$\\
+    \hline
+    \mintinline{text}`MaPcLEb_to_aPcGTb` & $a + c \le b \to a + c > b$\\
+    \hline
+    \mintinline{text}`MbPcLEa_to_bPcGTa` & $b + c \le a \to b + c > a$\\
+    \hline
+\end{tabular}
+\end{center}
+
+Beaucoup de mutants survivants atteignent une \textbf{couverture structurelle de 100\%} (zéro branche manquée, zéro ligne manquée), identique à celle de \mintinline{text}`TrianglesClassifierCorrected`. Ce résultat illustre une limite fondamentale de la couverture structurelle~: une couverture à 100\% des branches ne garantit pas l'absence de défauts sémantiques.
+
+En effet, les mutations $\le \to <$ sur les inégalités triangulaires ne créent pas de nouvelles branches dans le graphe de flot de contrôle~--~elles modifient uniquement la condition d'évaluation d'une branche existante. La suite de tests en vigueur exerce bien chaque branche dans les deux sens (\mintinline{text}`true` et \mintinline{text}`false`), mais uniquement avec des valeurs pour lesquelles le résultat est identique entre la version originale et le mutant. La différence de comportement n'est observable qu'au point de frontière $a + b = c$, qui n'est pas couvert par les cas de test actuels.
+
+\section{Bilan}
+
+\subsection{Le programme fourni est-il correct~?}
+
+Non. L'implémentation \mintinline{text}`TrianglesClassifier` fournie dans l'énoncé contient un défaut~: la condition de garde \mintinline{text}`if(a < 0 || b < 0 || c < 0)` utilise une inégalité stricte, alors que la spécifica\-tion requiert de rejeter les valeurs nulles.
+
+La condition correcte est \mintinline{text}`if(a <= 0 || b <= 0 || c <= 0)`. Ce défaut entraîne des résultats incorrects pour au moins quatre cas de test (VL1, VL5, VL9, VL22).
+
+Outre qu'elle ne respecte pas la spécification fonctionnelle, l'implémentation est également incorre\-cte d'un point de vue structurelle~: elle est bien trop complexe, avec des redondances dans la logique de classification (accumulation de \mintinline{text}`type`), et une organisation peu claire des conditions. Ce qui implique de devoir faire énormément de tests inutiles. La version corrigée \mintinline{text}`TrianglesClassifierCorrected` que nous avons développée --~en reprenant la même structure~-- est donc aussi incorrecte que l'originale, mais elle respecte la spécification et permet de mieux illustrer les techniques de test.
+
+\subsection{Quelles techniques permettent de détecter les anomalies~?}
+
+Les \textbf{tests aux valeurs aux limites} (section \ref{limits}) sont la technique la plus efficace pour détecter les anomalies de cette fonction. En ciblant précisément la borne inférieure du domaine, ils révèlent immédiatement le comportement incorrect sur les côtés nuls. Les classes d'équivalence seules auraient pu manquer ces cas si les bornes n'avaient pas été explicitement incluses.
+
+Le \textbf{test de mutation} a permis de valider la robustesse de la suite. L’ajout des cas dégénérés (VL23–VL25) a rendu la suite capable de tuer tous les mutants, y compris ceux portant sur les inégalités triangulaires. Aucune lacune n’a été identifiée dans la version finale de la suite. Le test de mutation se révèle ainsi indispensable pour évaluer objectivement la qualité d’une batterie de tests, au-delà de la simple couverture structurelle.
+
+\subsection{Quelles techniques sont les plus laborieuses~?}
+
+Le \textbf{test de mutation} est de loin la technique la plus coûteuse. La génération de 28 mutations élémentaires et de leurs $28 \times 28 = 784$ combinaisons produit 812 mutants, chacun nécessitant une compilation dynamique et l'exécution de la suite complète. Même avec l'optimisation \textit{lazy} (arrêt au premier échec), le volume de calcul et la mémoire nécessaire sont significatifs. Sans outillage dédié, la définition manuelle des opérateurs de mutation et l'analyse des résultats demandent également un effort de conception non négligeable (mais bien plus adapté à un contexte spécifique).
+
+\subsection{Commentaires}
+
+Ce TP illustre concrètement la complémentarité des techniques de test. Les tests fonctionnels (classes d'équivalence, valeurs aux limites) permettent de dériver une suite à partir de la spécification, indépendamment du code. La couverture structurelle garantit qu'aucun chemin d'exécution n'est ignoré. Le test de mutation, enfin, évalue la \textit{qualité} de la suite en simulant des défauts réels et en vérifiant que chacun est détecté. Aucune de ces trois techniques n'est suffisante seule~: leur combinaison permet d'obtenir un niveau de confiance élevé dans la correction du programme.
+
+Un point notable est que la couverture à 100\% des branches n'implique pas l'absence de mutants survivants~: c’est seulement après avoir enrichi la suite avec des cas dégénérés (VL23–VL25) que tous les mutants ont été tués. Cela montre que la couverture structurelle est une condition nécessaire mais non suffisante pour la qualité d'une suite de tests.
+
+\end{document}

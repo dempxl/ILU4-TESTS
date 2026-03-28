@@ -174,12 +174,12 @@ flowchart TB;
 
 ### 2.1 Classes d'équivalence
 
-| Paramètre               | Classe valide                                                        | Classe invalide                                                             |
-|-------------------------|----------------------------------------------------------------------|-----------------------------------------------------------------------------|
-| Valeur de $a$           | $a > 0$ (CV1)                                                        | $a \leq 0$ (CI1)                                                            |
-| Valeur de $b$           | $b > 0$ (CV2)                                                        | $b \leq 0$ (CI2)                                                            |
-| Valeur de $c$           | $c > 0$ (CV3)                                                        | $c \leq 0$ (CI3)                                                            |
-| Inégalité triangulaire  | $a+b > c$ et $a+c > b$ et $b+c > a$ (CV4)                           | $\neg(a+b > c$ et $a+c > b$ et $b+c > a)$ (CI4)                            |
+| Paramètre               | Classe valide                             | Classe invalide                                 |
+|-------------------------|-------------------------------------------|-------------------------------------------------|
+| Valeur de $a$           | $a > 0$ (CV1)                             | $a \leq 0$ (CI1)                                |
+| Valeur de $b$           | $b > 0$ (CV2)                             | $b \leq 0$ (CI2)                                |
+| Valeur de $c$           | $c > 0$ (CV3)                             | $c \leq 0$ (CI3)                                |
+| Inégalité triangulaire  | $a+b > c$ et $a+c > b$ et $b+c > a$ (CV4) | $\neg(a+b > c$ et $a+c > b$ et $b+c > a)$ (CI4) |
 
 ### 2.2 Valeurs aux limites
 
@@ -224,12 +224,33 @@ La mesure de couverture est effectuée sur la suite de tests définie en section
 
 Ce recodage est nécessaire pour deux raisons. D'abord, la version originale présente des comportements incorrects sur les cas aux limites (isocèles à côté nul et triangle nul), ce qui laisse certaines branches structurellement atteignables dans la spécification, mais jamais exercées dans la pratique. Ensuite, le test de mutation (section 6) s'appuie sur la version corrigée comme référence : générer des mutants à partir d'une base défectueuse reviendrait à mesurer l'écart par rapport à un comportement lui-même erroné.
 
+```java
+int typeTriangle(int a, int b, int c) {
+    if(a <= 0 || b <= 0 || c <= 0) return 0;
+    int type = 0;
+    if(a == b) type+=1;
+    if(a == c) type+=2;
+    if(b == c) type+=3;
+    if(type == 0) {
+        if(a + b <= c || a + c <= b || b + c <= a)
+            return 0;
+        return 1;
+    }
+    if(type > 3) return 3;
+    if(type == 1 && a + b > c) return 2;
+    if(type == 2 && a + c > b) return 2;
+    if(type == 3 && b + c > a) return 2;
+    
+    return 0;
+}
+```
+
 ### 3.2 Résultats de couverture (JaCoCo)
 
 | Classe                        | Instructions manquées | Instructions couvertes | Branches manquées | Branches couvertes | Lignes manquées | Lignes couvertes | Complexités manquées | Complexités couvertes |
-|-------------------------------|----------------------|------------------------|-------------------|--------------------|-----------------|------------------|---------------------|-----------------------|
-| `TrianglesClassifier`         | 2                    | 78                     | 4                 | 30                 | 1               | 13               | 4                   | 14                    |
-| `TrianglesClassifierCorrected`| 0                    | 80                     | 0                 | 34                 | 0               | 14               | 0                   | 18                    |
+|-------------------------------|-----------------------|------------------------|-------------------|--------------------|-----------------|------------------|----------------------|-----------------------|
+| `TrianglesClassifier`         | 2                     | 78                     | 4                 | 30                 | 1               | 13               | 4                    | 14                    |
+| `TrianglesClassifierCorrected`| 0                     | 80                     | 0                 | 34                 | 0               | 14               | 0                    | 18                    |
 
 ### 3.3 Analyse
 
@@ -259,7 +280,7 @@ Ces deux anomalies sont détectées par les tests aux limites (VL1, VL5, VL9, VL
 
 Le script de test est implémenté en Java et se compose de quatre éléments principaux :
 
-- **`ITriangleClassifier`** : interface fonctionnelle (`@FunctionalInterface`) définissant la signature `int classify(int a, int b, int c)`. Elle permet de passer n'importe quelle implémentation -- originale, corrigée ou mutante -- comme paramètre de méthode via une référence de méthode ou une lambda.
+- **`ITriangleClassifier`** : interface fonctionnelle (avec `@FunctionalInterface`) définissant la signature `int classify(int a, int b, int c)`. Elle permet de passer n'importe quelle implémentation -- originale, corrigée ou mutante -- comme paramètre de méthode via une référence de méthode ou une lambda.
 
 - **`RunTest`** : classe utilitaire qui lit un fichier de tests au format `a b c résultat_attendu` (un cas par ligne), invoque le classificateur sur chaque triplet, compare le résultat obtenu au résultat attendu, et produit un fichier de sortie listant chaque cas avec son verdict `PASS` ou `FAIL`. La méthode accepte un paramètre `lazy` : en mode paresseux, l'exécution s'interrompt dès le premier échec, sans écrire de fichier de sortie. Ce comportement est exploité dans `Main` pour ne conserver que les mutants qui passent l'intégralité de la suite et ainsi éviter de parasiter l'analyse avec des mutants manifestement défectueux.
 
@@ -283,7 +304,7 @@ a b c -> résultat_obtenu [PASS|FAIL]
 
 ### 5.3 Choix de conception
 
-L'usage d'une interface fonctionnelle pour le classificateur rend le script indépendant de toute implémentation concrète. L'ajout d'un nouveau mutant ne nécessite que d'enrichir le tableau `MUTATIONS` dans `Main` ; aucune modification du moteur de test n'est requise. La compilation dynamique dans `MutantGenerator` permet d'exécuter l'intégralité du cycle (génération, compilation, chargement, test) en une seule passe JVM, ce qui facilite également l'instrumentation JaCoCo sur les classes mutantes.
+L'usage d'une interface fonctionnelle pour le classificateur rend le script indépendant de toute implémentation concrète. L'ajout d'un nouveau mutant ne nécessite que d'enrichir la tablse `MUTATIONS` dans `Main` ; aucune modification du moteur de test n'est requise. La compilation dynamique dans `MutantGenerator` permet d'exécuter l'intégralité du cycle (génération, compilation, chargement, test) en une seule passe JVM, ce qui facilite également l'instrumentation JaCoCo sur les classes mutantes.
 
 Dans un premier temps, les mutants sont créés, compilés et stockés dans une liste. Puis, tous les tests sur tous les mutants sont exécutés. Cette approche en deux étapes est inefficace, car elle génère et compile les mutants et les stocke sans savoir s'ils survivront ou non. Le _"faible"_ nombre de mutants (812) rend cependant ce choix moins catastrophique que s'il avait été question de dizaines de milliers de mutants. Une optimisation possible serait de générer et tester les mutants un par un, en mode `lazy`, pour éviter de stocker des mutants manifestement défectueux.
 
@@ -295,7 +316,7 @@ Dans un premier temps, les mutants sont créés, compilés et stockés dans une 
 
 Les mutants ont été produits manuellement en appliquant des **opérateurs de mutation relationnels** à la version corrigée `TrianglesClassifierCorrected`. Les opérateurs utilisés remplacent chaque opérateur de comparaison (`<=`, `<`, `==`, `!=`, `>`, `>=`) par un autre opérateur de la même famille, sur chaque condition de la fonction.
 
-Vingt-huit mutations élémentaires ont été définies (tableau `MUTATIONS` dans `Main`). Elles ciblent :
+Vingt-huit mutations élémentaires ont été définies (table `MUTATIONS` dans `Main`). Elles ciblent :
 - la condition de garde ($a \le 0$, $b \le 0$, $c \le 0$),
 - les conditions d'égalité pour la détection du type ($a = b$, $a = c$, $b = c$),
 - les inégalités triangulaires ($a + b \le c$, etc.),
@@ -334,7 +355,7 @@ Ou une combinaison de mutations élémentaires :
 
 Beaucoup de mutants survivants atteignent une **couverture structurelle de 100%** (zéro branche manquée, zéro ligne manquée), identique à celle de `TrianglesClassifierCorrected`. Ce résultat illustre une limite fondamentale de la couverture structurelle : une couverture à 100% des branches ne garantit pas l'absence de défauts sémantiques.
 
-En effet, les mutations $\le \to <` sur les inégalités triangulaires ne créent pas de nouvelles branches dans le graphe de flot de contrôle -- elles modifient uniquement la condition d'évaluation d'une branche existante. La suite de tests en vigueur exerce bien chaque branche dans les deux sens (`true` et `false`), mais uniquement avec des valeurs pour lesquelles le résultat est identique entre la version originale et le mutant. La différence de comportement n'est observable qu'au point de frontière $a + b = c$, qui n'est pas couvert par les cas de test actuels.
+En effet, les mutations $\le \to <$ sur les inégalités triangulaires ne créent pas de nouvelles branches dans le graphe de flot de contrôle -- elles modifient uniquement la condition d'évaluation d'une branche existante. La suite de tests en vigueur exerce bien chaque branche dans les deux sens (`true` et `false`), mais uniquement avec des valeurs pour lesquelles le résultat est identique entre la version originale et le mutant. La différence de comportement n'est observable qu'au point de frontière $a + b = c$, qui n'est pas couvert par les cas de test actuels.
 
 ---
 
@@ -342,9 +363,11 @@ En effet, les mutations $\le \to <` sur les inégalités triangulaires ne créen
 
 ### 7.1 Le programme fourni est-il correct ?
 
-Non. L'implémentation `TrianglesClassifier` fournie dans l'énoncé contient un défaut : la condition de garde `if(a < 0 || b < 0 || c < 0)` utilise une inégalité stricte, alors que la spécification requiert de rejeter les valeurs nulles. La condition correcte est `if(a <= 0 || b <= 0 || c <= 0)`. Ce défaut entraîne des résultats incorrects pour au moins quatre cas de test (VL1, VL5, VL9, VL22).
+Non. L'implémentation `TrianglesClassifier` fournie dans l'énoncé contient un défaut : la condition de garde `if(a < 0 || b < 0 || c < 0)` utilise une inégalité stricte, alors que la spécification requiert de rejeter les valeurs nulles.
 
-Outre qu'elle ne respecte pas la spécification fonctionnelle, l'implémentation est également incorrecte d'un point de vue structurelle : elle est bien trop complexe, avec des redondances dans la logique de classification (accumulation de `type`), et une organisation peu claire des conditions. Ce qui implique de devoir faire énormément de tests inutiles. La version corrigée `TrianglesClassifierCorrected` que nous avons développée -- en reprenant la structure -- est donc aussi incorrecte que l'originale, mais elle respecte la spécification et permet de mieux illustrer les techniques de test.
+La condition correcte est `if(a <= 0 || b <= 0 || c <= 0)`. Ce défaut entraîne des résultats incorrects pour au moins quatre cas de test (VL1, VL5, VL9, VL22).
+
+Outre qu'elle ne respecte pas la spécification fonctionnelle, l'implémentation est également incorrecte d'un point de vue structurelle : elle est bien trop complexe, avec des redondances dans la logique de classification (accumulation de `type`), et une organisation peu claire des conditions. Ce qui implique de devoir faire énormément de tests inutiles. La version corrigée `TrianglesClassifierCorrected` que nous avons développée -- en reprenant la même structure -- est donc aussi incorrecte que l'originale, mais elle respecte la spécification et permet de mieux illustrer les techniques de test.
 
 ### 7.2 Quelles techniques permettent de détecter les anomalies ?
 
@@ -354,10 +377,10 @@ Le **test de mutation** a permis de valider la robustesse de la suite. L’ajout
 
 ### 7.3 Quelles techniques sont les plus laborieuses ?
 
-Le **test de mutation** est de loin la technique la plus coûteuse. La génération de 28 mutations élémentaires et de leurs $28 \times 28 = 784$ combinaisons produit 812 mutants, chacun nécessitant une compilation dynamique et l'exécution de la suite complète. Même avec l'optimisation *lazy* (arrêt au premier échec), le volume de calcul et la mémoire nécessaire sont significatifs. Sans outillage dédié, la définition manuelle des opérateurs de mutation et l'analyse des résultats demandent également un effort de conception non négligeable (mais bien plus adapté à un contexte spécifique).
+Le **test de mutation** est de loin la technique la plus coûteuse. La génération de 28 mutations élémentaires et de leurs $28 \times 28 = 784$ combinaisons produit 812 mutants, chacun nécessitant une compilation dynamique et l'exécution de la suite complète. Même avec l'optimisation _lazy_ (arrêt au premier échec), le volume de calcul et la mémoire nécessaire sont significatifs. Sans outillage dédié, la définition manuelle des opérateurs de mutation et l'analyse des résultats demandent également un effort de conception non négligeable (mais bien plus adapté à un contexte spécifique).
 
 ### 7.4 Commentaires
 
-Ce TP illustre concrètement la complémentarité des techniques de test. Les tests fonctionnels (classes d'équivalence, valeurs aux limites) permettent de dériver une suite à partir de la spécification, indépendamment du code. La couverture structurelle garantit qu'aucun chemin d'exécution n'est ignoré. Le test de mutation, enfin, évalue la *qualité* de la suite en simulant des défauts réels et en vérifiant que chacun est détecté. Aucune de ces trois techniques n'est suffisante seule : leur combinaison permet d'obtenir un niveau de confiance élevé dans la correction du programme.
+Ce TP illustre concrètement la complémentarité des techniques de test. Les tests fonctionnels (classes d'équivalence, valeurs aux limites) permettent de dériver une suite à partir de la spécification, indépendamment du code. La couverture structurelle garantit qu'aucun chemin d'exécution n'est ignoré. Le test de mutation, enfin, évalue la _qualité_ de la suite en simulant des défauts réels et en vérifiant que chacun est détecté. Aucune de ces trois techniques n'est suffisante seule : leur combinaison permet d'obtenir un niveau de confiance élevé dans la correction du programme.
 
 Un point notable est que la couverture à 100% des branches n'implique pas l'absence de mutants survivants : c’est seulement après avoir enrichi la suite avec des cas dégénérés (VL23–VL25) que tous les mutants ont été tués. Cela montre que la couverture structurelle est une condition nécessaire mais non suffisante pour la qualité d'une suite de tests.
