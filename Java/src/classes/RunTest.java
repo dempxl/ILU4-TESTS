@@ -5,64 +5,61 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
 
 public class RunTest {
-	private RunTest(){}
+    private RunTest() {}
 
-	public static void run(String inputFile, String outputFile, Class<?> classe){
-		Method typeTriangleMethod;
+    public static boolean run(String inputFile, String outputFile, ITriangleClassifier classifier) {
+        return run(inputFile, outputFile, classifier, false);
+    }
 
-		try {
-			typeTriangleMethod = classe.getMethod("typeTriangle", int.class, int.class, int.class);
-			if (!Modifier.isStatic(typeTriangleMethod.getModifiers())) {
-				throw new IllegalArgumentException("La methode typeTriangle doit etre statique dans " + classe.getName());
-			}
-		} catch (NoSuchMethodException e) {
-			throw new IllegalArgumentException("La classe " + classe.getName() + " doit definir typeTriangle(int, int, int)", e);
-		}
+    public static boolean run(String inputFile, String outputFile, ITriangleClassifier classifier, boolean lazy) {
+        boolean result = true;
+        List<String> lignes = new ArrayList<>();
 
-		// On initialise le fichier d'entrée et de sortie
-		try (
+        // On initialise le fichier d'entrée et de sortie
+        try (
             BufferedReader reader = new BufferedReader(new FileReader(inputFile));
-            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))
         ) {
-			String ligne;
+            String ligne;
 
-			while((ligne = reader.readLine()) != null){
-				// On sépare les valeurs
-				String[] parties = ligne.split(" ");
+            while((ligne = reader.readLine()) != null){
+                // On sépare les valeurs
+                String[] parties = ligne.split(" ");
+                if(parties.length != 4) continue;
 
-				if (parties.length != 4){
-					continue;
-				}
+                int a = Integer.parseInt(parties[0]);    // Argument a
+                int b = Integer.parseInt(parties[1]);    // Argument b
+                int c = Integer.parseInt(parties[2]);    // Argument c
+                int res_attendu = Integer.parseInt(parties[3]); // résultat attendu
 
-				int a = Integer.parseInt(parties[0]);	// Argument a
-				int b = Integer.parseInt(parties[1]);	// Argument b
-				int c = Integer.parseInt(parties[2]);	// Argument c
-				int res_attendu = Integer.parseInt(parties[3]); // résultat attendu
+                // On appel la fonction de classification sur la classe fournie
+                int res_triangle = classifier.classify(a, b, c);
 
-				// On appel la fonction de classification sur la classe fournie
-				int res_triangle;
-				try {
-					res_triangle = (int) typeTriangleMethod.invoke(null, a, b, c);
-				} catch (IllegalAccessException | InvocationTargetException e) {
-					throw new RuntimeException("Impossible d'appeler typeTriangle sur " + classe.getName(), e);
-				}
+                boolean pass = (res_attendu == res_triangle);
+                result &= pass;
 
-				// On compare le résultat avec ce qui est attendu
-				String res_valide = (res_attendu == res_triangle)? "PASS" : "FAIL";
+                if(lazy && !result) return false;
 
-				// On écrit le résultat dans le fichier de sortie
-				writer.write(a + " " + b + " " + c + " -> " + res_triangle +" [" + res_valide + "]");	// Version détaillée
-				// writer.write(res_triangle+"");	// Version compacte
-				writer.newLine();	// Un résultat par ligne
-			}
-		} catch (IOException e){
-			e.printStackTrace();
-		}
-	
-	}
+                lignes.add(a + " " + b + " " + c + " -> " + res_triangle + " [" + (pass ? "PASS" : "FAIL") + "]");
+            }
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+
+        if(!lazy || result) {
+            try(BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
+                for(String l : lignes) {
+                    writer.write(l);
+                    writer.newLine();
+                }
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return result;
+    }
 }

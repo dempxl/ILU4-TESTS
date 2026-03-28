@@ -9,6 +9,7 @@ reportmd = rapport/report.md
 testreportargs = jacoco.exec --classfiles $(out) --sourcefiles Java/src --html $(reportdir)
 testcsvargs = jacoco.exec --classfiles $(out) --sourcefiles Java/src --csv $(reportcsv)
 testout = "sources/valeurs_test_OUT*.txt"
+tempclasses = ./Java/bin/tmp/classes
 
 exec: compile
 	java -cp $(out) $(main)
@@ -34,3 +35,4 @@ clean:
 	rm -rf rapport
 	rm -f $(testout)
 	rm -f $(reportcsv)
+	rm -rf $(tempclasses)

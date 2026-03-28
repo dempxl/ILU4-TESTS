@@ -1,4 +1,4 @@
-*.classes
+*.class
 jacoco.exec
 sources/valeurs_test_OUT*.txt
-./Java/out/
+Java/bin/
