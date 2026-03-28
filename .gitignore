@@ -2,3 +2,8 @@
 jacoco.exec
 sources/valeurs_test_OUT*.txt
 Java/bin/
+Java/.metadata/
+Java/.settings/
+Java/.classpath
+Java/.project
+Java/.sonarlint/

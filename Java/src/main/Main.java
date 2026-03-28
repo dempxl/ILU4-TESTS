@@ -1,10 +1,7 @@
 package main;
 
-import classes.RunTest;
-import classes.TrianglesClassifier;
-import classes.TrianglesClassifierCorrected;
-import classes.MutantGenerator;
-import classes.ITriangleClassifier;
+import classes.*;
+import classifier.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +53,7 @@ public class Main {
             new ArgsTest(FILE_IN, FILE_OUT + "_C.txt", TrianglesClassifierCorrected::typeTriangle)
         ));
 
-        String originalSource = Files.readString(Path.of("Java/src/classes/TrianglesClassifierCorrected.java"));
+        String originalSource = Files.readString(Path.of("Java/src/classifier/TrianglesClassifierCorrected.java"));
 
         for(MutantGenerator.Mutation m : MUTATIONS) {
             String name = "M" + m.name();

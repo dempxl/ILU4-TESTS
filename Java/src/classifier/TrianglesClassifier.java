@@ -1,4 +1,4 @@
-package classes;
+package classifier;
 
 public class TrianglesClassifier {
     private TrianglesClassifier() {}

@@ -33,7 +33,7 @@ public class MutantGenerator {
             .replace("class TrianglesClassifierCorrected", "class " + className)
             .replace("TrianglesClassifierCorrected()", className + "()");
 
-        Path classesDir = Path.of(TMP_DIR + "classes/");
+        Path classesDir = Path.of(TMP_DIR + "classifier/");
         Files.createDirectories(classesDir);
 
         File sourceFile = classesDir.resolve(className + ".java").toFile();
@@ -58,7 +58,7 @@ public class MutantGenerator {
             new URL[]{ new File(TMP_DIR).toURI().toURL() }
         );
         
-        Class<?> cls = classLoader.loadClass("classes." + className);
+        Class<?> cls = classLoader.loadClass("classifier." + className);
         Method m = cls.getMethod("typeTriangle", int.class, int.class, int.class);
         return (a, b, c) -> {
             try { return (int) m.invoke(null, a, b, c); }
