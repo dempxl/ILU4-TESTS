@@ -33,7 +33,7 @@
 \newcolumntype{C}{>{\centering\arraybackslash}X}
 
 \title{Rapport de TP ILU4~--~Tests fonctionnels et structurels}
-\author{\href{mailto:loganlarrouxpro@gmail.com}{Logan Larroux}, Loay Younes, \href{mailto:manolo.sardo@example.com}{Manolo Sardó}\\\href{https://univ-tlse3.fr}{Université de Toulouse}}
+\author{\href{mailto:loganlarrouxpro@gmail.com}{Logan Larroux}, \href{mailto:loay.younes@utoulouse.fr}{Loay Younes}, \href{mailto:manolo.sardo@example.com}{Manolo Sardó}\\\href{https://univ-tlse3.fr}{Université de Toulouse}}
 \date{\today}
 
 \begin{document}
@@ -390,7 +390,7 @@ Le script de test est implémenté en Java et se compose de quatre éléments pr
     \item[ITriangleClassifier~:] interface fonctionnelle (avec \mintinline{text}`@FunctionalInterface`) définissant la signature \mintinline{text}`int classify(int a, int b, int c)`. Elle permet de passer n'importe quelle implémentation --~originale, corrigée ou mutante~-- comme paramètre de méthode via une référence de méthode ou une lambda.
     \item[RunTest~:] classe utilitaire qui lit un fichier de tests au format \mintinline{text}`a b c résultat_attendu` (un cas par ligne), invoque le classificateur sur chaque triplet, compare le résultat obtenu au résultat attendu, et produit un fichier de sortie listant chaque cas avec son verdict \mintinline{text}`PASS` ou \mintinline{text}`FAIL`. La méthode accepte un paramètre \mintinline{text}`lazy`~: en mode paresseux, l'exécution s'interrompt dès le premier échec, sans écrire de fichier de sortie. Ce comportement est exploité dans \mintinline{text}`Main` pour ne conserver que les mutants qui passent l'intégralité de la suite et ainsi éviter de parasiter l'analyse avec des mutants manifestement défectueux.
     \item[MutantGenerator~:] classe qui génère dynamiquement des mutants à partir du code source de \mintinline{text}`TrianglesClassifierCorrected`. Pour chaque mutation (ou combinaison de mutations), elle effectue un remplacement textuel dans le source, compile le résultat en mémoire via l'API \mintinline{text}`javax.tools.JavaCompiler`, charge la classe générée dans un \mintinline{text}`URLClassLoader` isolé, et re\-tourne une instance de \mintinline{text}`ITriangleClassifier` par réflexion. Cette approche évite toute dépend\-ance à un outil externe de mutation, ce qui permet une grande maléabilité dans les mutations, ainsi qu'une comptabilité directe avec JaCoCo.
-    \item[Main~:] point d'entrée orchestrant l'ensemble. Il construit la liste de tous les cas à tester --~les deux implémentations de référence, puis les 28 mutants simples, puis les $28 \times 28 = 784$ mutants doubles~-- et exécute \mintinline{text}`RunTest` sur chacun. Seuls les mutants ayant passé tous les tests (mode \mintinline{text}`lazy`) sont affichés dans le rapport final.
+    \item[Main~:] point d'entrée orchestrant l'ensemble. Il construit la liste de tous les cas à tester --~les deux implémentations de référence, puis les 35 mutants simples, puis les $35 \times 35 = 1225$ mutants doubles~-- et exécute \mintinline{text}`RunTest` sur chacun. Seuls les mutants ayant passé tous les tests (mode \mintinline{text}`lazy`) sont affichés dans le rapport final.
 \end{description}
 
 \subsection{Format des fichiers de test}
@@ -413,7 +413,7 @@ a b c -> résultat_obtenu [PASS|FAIL]
 
 L'usage d'une interface fonctionnelle pour le classificateur rend le script indépendant de toute implémentation concrète. L'ajout d'un nouveau mutant ne nécessite que d'enrichir la table \mintinline{text}`MUTATIONS` dans \mintinline{text}`Main`~; aucune modification du moteur de test n'est requise. La compilation dynamique dans `MutantGenerator` permet d'exécuter l'intégralité du cycle (génération, compilation, chargement, test) en une seule passe JVM, ce qui facilite également l'instrumentation JaCoCo sur les classes mutantes.
 
-Dans un premier temps, les mutants sont créés, compilés et stockés dans une liste. Puis, tous les tests sur tous les mutants sont exécutés. Cette approche en deux étapes est inefficace, car elle génère et compile les mutants et les stocke sans savoir s'ils survivront ou non. Le \textit{"faible"} nombre de mutants (812) rend cependant ce choix moins catastrophique que s'il avait été question de dizaines de milliers de mutants. Une optimisation possible serait de générer et tester les mutants un par un, en mode \mintinline{text}`lazy`, pour éviter de stocker des mutants manifestement défectueux.
+Dans un premier temps, les mutants sont créés, compilés et stockés dans une liste. Puis, tous les tests sur tous les mutants sont exécutés. Cette approche en deux étapes est inefficace, car elle génère et compile les mutants et les stocke sans savoir s'ils survivront ou non. Le \textit{"faible"} nombre de mutants (1260) rend cependant ce choix moins catastrophique que s'il avait été question de dizaines de milliers de mutants. Une optimisation possible serait de générer et tester les mutants un par un, en mode \mintinline{text}`lazy`, pour éviter de stocker des mutants manifestement défectueux.
 
 \section{Test de mutation}
 
@@ -421,18 +421,19 @@ Dans un premier temps, les mutants sont créés, compilés et stockés dans une 
 
 \subsection{Création des mutants}
 
-Les mutants ont été produits manuellement en appliquant des \textbf{opérateurs de mutation relation\-nels} à la version corrigée \mintinline{text}`TrianglesClassifierCorrected`. Les opérateurs utilisés remplacent chaque opérateur de comparaison (\mintinline{text}`<=`, \mintinline{text}`<`, \mintinline{text}`==`, \mintinline{text}`!=`, \mintinline{text}`>`, \mintinline{text}`>=`) par un autre opérateur de la même famille, sur chaque condition de la fonction.
+Les mutants ont été produits manuellement en appliquant des \textbf{opérateurs de mutation relation\-nels} à la version corrigée \mintinline{text}`TrianglesClassifierCorrected`. Les opérateurs utilisés remplacent chaque opérateur relationnel (\mintinline{text}`<=`, \mintinline{text}`<`, \mintinline{text}`==`, \mintinline{text}`!=`, \mintinline{text}`>`, \mintinline{text}`>=`, \mintinline{text}`&&`, \mintinline{text}`||`) par un autre opérateur de la même famille, sur chaque condition de la fonction.
 
-Vingt-huit mutations élémentaires ont été définies (table \mintinline{text}`MUTATIONS` dans \mintinline{text}`Main`). Elles ciblent~:
+35 mutations élémentaires ont été définies (table \mintinline{text}`MUTATIONS` dans \mintinline{text}`Main`). Elles ciblent~:
 
 \begin{itemize}[label=$\bullet$]
     \item la condition de garde ($a \le 0$, $b \le 0$, $c \le 0$),
     \item les conditions d'égalité pour la détection du type ($a = b$, $a = c$, $b = c$),
     \item les inégalités triangulaires ($a + b \le c$, etc.),
     \item les seuils de discrimination du type final ($\text{type} = 0$, $\text{type} > 3$, $\text{type} = 1$, $\text{type} = 2$, $\text{type} = 3$) et leurs inverses.
+    \item les opérateurs logiques (\mintinline{text}`&&`, \mintinline{text}`||`) dans les conditions composées.
 \end{itemize}
 
-En plus des 28 mutants d'ordre 1, tous les couples de mutations ont été générés, soit $28 \times 28 = 784$ mutants d'ordre 2, pour un total de \textbf{812 mutants}.
+En plus des 35 mutants d'ordre 1, tous les couples de mutations ont été générés, soit $35 \times 35 = 1225$ mutants d'ordre 2, pour un total de \textbf{1260 mutants}.
 
 Le choix de ne pas utiliser d'outil dédié (PIT, \textmu Java, etc.) est motivé par deux raisons (déjà mentionnées dans la section \ref{choice})~:
 
@@ -445,7 +446,7 @@ Le choix de ne pas utiliser d'outil dédié (PIT, \textmu Java, etc.) est motiv�
 
 Un mutant est dit \textbf{survivant} s'il passe l'intégralité de la suite de tests~--~c'est-à-dire que, pour chaque cas de test, il produit le même résultat que la spécification. Un mutant survivant révèle une lacune de la suite~: il existe un défaut que les tests ne détectent pas~; ou dans la perspective inverse, la structure de l'implémentation est suffisamment incorrecte pour que les tests ne puissent pas distinguer le comportement du mutant de celui de la version corrigée.
 
-Parmi les 812 mutants générés, \textbf{aucun ne survit}. Tous sont tués par au moins un cas de test. Les tests aux limites (VL1, VL5, VL9, VL22) détectent les mutations sur la condition de garde.
+Parmi les 1260 mutants générés, \textbf{aucun ne survit}. Tous sont tués par au moins un cas de test. Les tests aux limites (VL1, VL5, VL9, VL22) détectent les mutations sur la condition de garde.
 
 Certains tests se montrent essentiels pour tuer des mutants spécifiques. Par exemple, les tests VL23, VL24 et VL25 servent à tuer les mutants ayant ces mutations élémentaires~:
 
@@ -487,9 +488,9 @@ Ou une combinaison de mutations élémentaires~:
 \end{tabular}
 \end{center}
 
-Beaucoup de mutants survivants atteignent une \textbf{couverture structurelle de 100\%} (zéro branche manquée, zéro ligne manquée), identique à celle de \mintinline{text}`TrianglesClassifierCorrected`. Ce résultat illustre une limite fondamentale de la couverture structurelle~: une couverture à 100\% des branches ne garantit pas l'absence de défauts sémantiques.
+Beaucoup de mutants survivants atteignent une \textbf{couverture structurelle de 100\%} (57 mutants sans compter \mintinline{text}`TrianglesClassifierCorrected`) (zéro branche manquée, zéro ligne manquée), identique à celle de \mintinline{text}`TrianglesClassifierCorrected`. Ce résultat illustre une limite fondamentale de la couverture structurelle~: une couverture à 100\% des branches ne garantit pas l'absence de défauts sémantiques.
 
-En effet, les mutations $\le \to <$ sur les inégalités triangulaires ne créent pas de nouvelles branches dans le graphe de flot de contrôle~--~elles modifient uniquement la condition d'évaluation d'une branche existante. La suite de tests en vigueur exerce bien chaque branche dans les deux sens (\mintinline{text}`true` et \mintinline{text}`false`), mais uniquement avec des valeurs pour lesquelles le résultat est identique entre la version originale et le mutant. La différence de comportement n'est observable qu'au point de frontière $a + b = c$, qui n'est pas couvert par les cas de test actuels.
+En effet, les mutations $\le \to <$ sur les inégalités triangulaires ne créent pas de nouvelles branches dans le graphe de flot de contrôle~--~elles modifient uniquement la condition d'évaluation d'une branche existante. La suite de tests en vigueur exerce bien chaque branche dans les deux sens (\mintinline{text}`true` et \mintinline{text}`false`), mais uniquement avec des valeurs pour lesquelles le résultat est identique entre la version originale et le mutant. La différence de comportement n'est observable qu'au point de frontière $a + b = c$, couvert précisément par les cas VL23–VL25.
 
 \section{Bilan}
 
@@ -509,7 +510,7 @@ Le \textbf{test de mutation} a permis de valider la robustesse de la suite. L’
 
 \subsection{Quelles techniques sont les plus laborieuses~?}
 
-Le \textbf{test de mutation} est de loin la technique la plus coûteuse. La génération de 28 mutations élémentaires et de leurs $28 \times 28 = 784$ combinaisons produit 812 mutants, chacun nécessitant une compilation dynamique et l'exécution de la suite complète. Même avec l'optimisation \textit{lazy} (arrêt au premier échec), le volume de calcul et la mémoire nécessaire sont significatifs. Sans outillage dédié, la définition manuelle des opérateurs de mutation et l'analyse des résultats demandent également un effort de conception non négligeable (mais bien plus adapté à un contexte spécifique).
+Le \textbf{test de mutation} est de loin la technique la plus coûteuse. La génération de 35 mutations élémentaires et de leurs $35 \times 35 = 1225$ combinaisons produit 1260 mutants, chacun nécessitant une compilation dynamique et l'exécution de la suite complète. Même avec l'optimisation \textit{lazy} (arrêt au premier échec), le volume de calcul et la mémoire nécessaire sont significatifs. Sans outillage dédié, la définition manuelle des opérateurs de mutation et l'analyse des résultats demandent également un effort de conception non négligeable (mais bien plus adapté à un contexte spécifique).
 
 \subsection{Commentaires}
 

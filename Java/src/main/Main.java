@@ -45,6 +45,13 @@ public class Main {
         new MutantGenerator.Mutation("a == b"    , "a <= b"    ),
         new MutantGenerator.Mutation("a == c"    , "a <= c"    ),
         new MutantGenerator.Mutation("b == c"    , "b <= c"    ),
+        new MutantGenerator.Mutation("0 || b"    , "0 && b"    ),
+        new MutantGenerator.Mutation("0 || c"    , "0 && c"    ),
+        new MutantGenerator.Mutation("c || a"    , "c && a"    ),
+        new MutantGenerator.Mutation("b || b"    , "b && b"    ),
+        new MutantGenerator.Mutation("1 && a"    , "1 || a"    ),
+        new MutantGenerator.Mutation("2 && a"    , "2 || a"    ),
+        new MutantGenerator.Mutation("3 && b"    , "3 || b"    ),
     };
 
     public static void main(String[] args) throws Exception {

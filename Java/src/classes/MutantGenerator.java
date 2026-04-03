@@ -12,6 +12,8 @@ public class MutantGenerator {
     public record Mutation(String avant, String apres) {
         public String name() {
             return (avant + "_to_" + apres)
+                .replace("&&", "AND")
+                .replace("||", "OR")
                 .replace("<=", "LE")
                 .replace(">=", "GE")
                 .replace("==", "EQ")

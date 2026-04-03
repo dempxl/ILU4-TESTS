@@ -286,7 +286,7 @@ Le script de test est implémenté en Java et se compose de quatre éléments pr
 
 - **`MutantGenerator`** : classe qui génère dynamiquement des mutants à partir du code source de `TrianglesClassifierCorrected`. Pour chaque mutation (ou combinaison de mutations), elle effectue un remplacement textuel dans le source, compile le résultat en mémoire via l'API `javax.tools.JavaCompiler`, charge la classe générée dans un `URLClassLoader` isolé, et retourne une instance de `ITriangleClassifier` par réflexion. Cette approche évite toute dépendance à un outil externe de mutation, ce qui permet une grande maléabilité dans les mutations, ainsi qu'une comptabilité directe avec JaCoCo.
 
-- **`Main`** : point d'entrée orchestrant l'ensemble. Il construit la liste de tous les cas à tester -- les deux implémentations de référence, puis les 28 mutants simples, puis les $28 \times 28 = 784$ mutants doubles -- et exécute `RunTest` sur chacun. Seuls les mutants ayant passé tous les tests (mode `lazy`) sont affichés dans le rapport final.
+- **`Main`** : point d'entrée orchestrant l'ensemble. Il construit la liste de tous les cas à tester -- les deux implémentations de référence, puis les 35 mutants simples, puis les $35 \times 35 = 1225$ mutants doubles -- et exécute `RunTest` sur chacun. Seuls les mutants ayant passé tous les tests (mode `lazy`) sont affichés dans le rapport final.
 
 ### 5.2 Format des fichiers de test
 
@@ -306,7 +306,7 @@ a b c -> résultat_obtenu [PASS|FAIL]
 
 L'usage d'une interface fonctionnelle pour le classificateur rend le script indépendant de toute implémentation concrète. L'ajout d'un nouveau mutant ne nécessite que d'enrichir la tablse `MUTATIONS` dans `Main` ; aucune modification du moteur de test n'est requise. La compilation dynamique dans `MutantGenerator` permet d'exécuter l'intégralité du cycle (génération, compilation, chargement, test) en une seule passe JVM, ce qui facilite également l'instrumentation JaCoCo sur les classes mutantes.
 
-Dans un premier temps, les mutants sont créés, compilés et stockés dans une liste. Puis, tous les tests sur tous les mutants sont exécutés. Cette approche en deux étapes est inefficace, car elle génère et compile les mutants et les stocke sans savoir s'ils survivront ou non. Le _"faible"_ nombre de mutants (812) rend cependant ce choix moins catastrophique que s'il avait été question de dizaines de milliers de mutants. Une optimisation possible serait de générer et tester les mutants un par un, en mode `lazy`, pour éviter de stocker des mutants manifestement défectueux.
+Dans un premier temps, les mutants sont créés, compilés et stockés dans une liste. Puis, tous les tests sur tous les mutants sont exécutés. Cette approche en deux étapes est inefficace, car elle génère et compile les mutants et les stocke sans savoir s'ils survivront ou non. Le _"faible"_ nombre de mutants (1260) rend cependant ce choix moins catastrophique que s'il avait été question de dizaines de milliers de mutants. Une optimisation possible serait de générer et tester les mutants un par un, en mode `lazy`, pour éviter de stocker des mutants manifestement défectueux.
 
 ---
 
@@ -314,15 +314,16 @@ Dans un premier temps, les mutants sont créés, compilés et stockés dans une 
 
 ### 6.1 Création des mutants
 
-Les mutants ont été produits manuellement en appliquant des **opérateurs de mutation relationnels** à la version corrigée `TrianglesClassifierCorrected`. Les opérateurs utilisés remplacent chaque opérateur de comparaison (`<=`, `<`, `==`, `!=`, `>`, `>=`) par un autre opérateur de la même famille, sur chaque condition de la fonction.
+Les mutants ont été produits manuellement en appliquant des **opérateurs de mutation relationnels** à la version corrigée `TrianglesClassifierCorrected`. Les opérateurs utilisés remplacent chaque opérateur relationnel (`<=`, `<`, `==`, `!=`, `>`, `>=`, `&&`, `||`) par un autre opérateur de la même famille, sur chaque condition de la fonction.
 
-Vingt-huit mutations élémentaires ont été définies (table `MUTATIONS` dans `Main`). Elles ciblent :
+35 mutations élémentaires ont été définies (table `MUTATIONS` dans `Main`). Elles ciblent :
 - la condition de garde ($a \le 0$, $b \le 0$, $c \le 0$),
 - les conditions d'égalité pour la détection du type ($a = b$, $a = c$, $b = c$),
 - les inégalités triangulaires ($a + b \le c$, etc.),
 - les seuils de discrimination du type final ($\text{type} = 0$, $\text{type} > 3$, $\text{type} = 1$, $\text{type} = 2$, $\text{type} = 3$) et leurs inverses.
+- les opérateurs logiques (`&&`, `||`) dans les conditions composées.
 
-En plus des 28 mutants d'ordre 1, tous les couples de mutations ont été générés, soit $28 \times 28 = 784$ mutants d'ordre 2, pour un total de **812 mutants**.
+En plus des 35 mutants d'ordre 1, tous les couples de mutations ont été générés, soit $35 \times 35 = 1225$ mutants d'ordre 2, pour un total de **1260 mutants**.
 
 Le choix de ne pas utiliser d'outil dédié (PIT, µJava, etc.) est motivé par deux raisons (déjà mentionnées dans la section 5.3) :
 - D'une part, cela permet un contrôle précis sur les mutations appliquées et leur encodage dans le nom de la classe générée, ce qui est nécessaire pour corréler les résultats de mutation avec les rapports JaCoCo individuels.
@@ -332,7 +333,7 @@ Le choix de ne pas utiliser d'outil dédié (PIT, µJava, etc.) est motivé par 
 
 Un mutant est dit **survivant** s'il passe l'intégralité de la suite de tests -- c'est-à-dire que, pour chaque cas de test, il produit le même résultat que la spécification. Un mutant survivant révèle une lacune de la suite : il existe un défaut que les tests ne détectent pas ; ou dans la perspective inverse, la structure de l'implémentation est suffisamment incorrecte pour que les tests ne puissent pas distinguer le comportement du mutant de celui de la version corrigée.
 
-Parmi les 812 mutants générés, **aucun ne survit**. Tous sont tués par au moins un cas de test. Les tests aux limites (VL1, VL5, VL9, VL22) détectent les mutations sur la condition de garde.
+Parmi les 1260 mutants générés, **aucun ne survit**. Tous sont tués par au moins un cas de test. Les tests aux limites (VL1, VL5, VL9, VL22) détectent les mutations sur la condition de garde.
 
 Certains tests se montrent essentiels pour tuer des mutants spécifiques. Par exemple, les tests VL23, VL24 et VL25 servent à tuer les mutants ayant ces mutations élémentaires :
 
@@ -353,9 +354,9 @@ Ou une combinaison de mutations élémentaires :
 | `MaPcLEb_to_aPcGTb` | $a + c \le b \to a + c > b$ |
 | `MbPcLEa_to_bPcGTa` | $b + c \le a \to b + c > a$ |
 
-Beaucoup de mutants survivants atteignent une **couverture structurelle de 100%** (zéro branche manquée, zéro ligne manquée), identique à celle de `TrianglesClassifierCorrected`. Ce résultat illustre une limite fondamentale de la couverture structurelle : une couverture à 100% des branches ne garantit pas l'absence de défauts sémantiques.
+Beaucoup de mutants survivants atteignent une **couverture structurelle de 100%** (57 mutants sans compter `TrianglesClassifierCorrected`) (zéro branche manquée, zéro ligne manquée), identique à celle de `TrianglesClassifierCorrected`. Ce résultat illustre une limite fondamentale de la couverture structurelle : une couverture à 100% des branches ne garantit pas l'absence de défauts sémantiques.
 
-En effet, les mutations $\le \to <$ sur les inégalités triangulaires ne créent pas de nouvelles branches dans le graphe de flot de contrôle -- elles modifient uniquement la condition d'évaluation d'une branche existante. La suite de tests en vigueur exerce bien chaque branche dans les deux sens (`true` et `false`), mais uniquement avec des valeurs pour lesquelles le résultat est identique entre la version originale et le mutant. La différence de comportement n'est observable qu'au point de frontière $a + b = c$, qui n'est pas couvert par les cas de test actuels.
+En effet, les mutations $\le \to <$ sur les inégalités triangulaires ne créent pas de nouvelles branches dans le graphe de flot de contrôle -- elles modifient uniquement la condition d'évaluation d'une branche existante. La suite de tests en vigueur exerce bien chaque branche dans les deux sens (`true` et `false`), mais uniquement avec des valeurs pour lesquelles le résultat est identique entre la version originale et le mutant. La différence de comportement n'est observable qu'au point de frontière $a + b = c$, couvert précisément par les cas VL23–VL25.
 
 ---
 
@@ -377,7 +378,7 @@ Le **test de mutation** a permis de valider la robustesse de la suite. L’ajout
 
 ### 7.3 Quelles techniques sont les plus laborieuses ?
 
-Le **test de mutation** est de loin la technique la plus coûteuse. La génération de 28 mutations élémentaires et de leurs $28 \times 28 = 784$ combinaisons produit 812 mutants, chacun nécessitant une compilation dynamique et l'exécution de la suite complète. Même avec l'optimisation _lazy_ (arrêt au premier échec), le volume de calcul et la mémoire nécessaire sont significatifs. Sans outillage dédié, la définition manuelle des opérateurs de mutation et l'analyse des résultats demandent également un effort de conception non négligeable (mais bien plus adapté à un contexte spécifique).
+Le **test de mutation** est de loin la technique la plus coûteuse. La génération de 35 mutations élémentaires et de leurs $35 \times 35 = 1225$ combinaisons produit 1260 mutants, chacun nécessitant une compilation dynamique et l'exécution de la suite complète. Même avec l'optimisation _lazy_ (arrêt au premier échec), le volume de calcul et la mémoire nécessaire sont significatifs. Sans outillage dédié, la définition manuelle des opérateurs de mutation et l'analyse des résultats demandent également un effort de conception non négligeable (mais bien plus adapté à un contexte spécifique).
 
 ### 7.4 Commentaires
 
